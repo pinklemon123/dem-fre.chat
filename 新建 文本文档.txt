@@ -1,0 +1,210 @@
+好的 👍 我给你整理一份 完整文档，你可以直接放进 VSCode 项目里，作为 README 或者部署指南。这样你在用 AI 辅助开发时，它也能一眼理解整个环境与流程。
+
+🚀 Google Cloud + Docker + Cloud Run 部署指南
+
+本指南演示如何把一个 Node.js/Express 后端打包成 Docker 镜像，并部署到 Google Cloud Run，配合 Cloud SQL 数据库和 Firebase Hosting 前端。
+
+目录
+
+前置条件
+
+项目结构
+
+Docker 打包
+
+本地运行与测试
+
+推送到 Google Artifact Registry
+
+部署到 Cloud Run
+
+（可选）连接 Cloud SQL
+
+（可选）前端静态站点 + API 反代
+
+下一步
+
+1. 前置条件
+
+已安装并登录：
+
+Docker Desktop
+（WSL2 下集成）
+
+Google Cloud SDK
+
+Firebase CLI
+（用于托管前端）
+
+验证命令是否可用：
+
+docker --version
+gcloud --version
+firebase --version
+
+
+登录 Google Cloud：
+
+gcloud auth login
+gcloud config set project PROJECT_ID
+
+2. 项目结构
+
+示例 Node.js Express 项目：
+
+myapp/
+ ├─ Dockerfile
+ ├─ package.json
+ ├─ index.js
+ └─ prisma/
+     └─ schema.prisma
+
+
+index.js
+
+import express from "express";
+import { PrismaClient } from "@prisma/client";
+
+const app = express();
+app.use(express.json());
+
+const prisma = new PrismaClient();
+
+app.get("/health", (_req, res) => res.send({ ok: true }));
+
+app.get("/notes", async (_req, res) => {
+  const notes = await prisma.note.findMany({ orderBy: { id: "desc" } });
+  res.send(notes);
+});
+
+app.post("/notes", async (req, res) => {
+  const note = await prisma.note.create({ data: { content: req.body.content ?? "" } });
+  res.status(201).send(note);
+});
+
+const port = process.env.PORT || 8080;
+app.listen(port, () => console.log(`API running on port ${port}`));
+
+3. Docker 打包
+
+Dockerfile
+
+FROM node:20-alpine
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --only=production
+COPY . .
+
+EXPOSE 8080
+CMD ["npm", "start"]
+
+4. 本地运行与测试
+# 构建镜像
+docker build -t myapp:1.0 .
+
+# 运行容器
+docker run -p 8080:8080 myapp:1.0
+
+
+浏览器访问 http://localhost:8080/health
+ ，应返回 { ok: true }。
+
+5. 推送到 Google Artifact Registry
+
+启用服务：
+
+gcloud services enable artifactregistry.googleapis.com
+
+
+创建仓库：
+
+gcloud artifacts repositories create my-repo \
+  --repository-format=docker \
+  --location=asia-east1 \
+  --description="Docker repo for my app"
+
+
+配置 Docker 登录：
+
+gcloud auth configure-docker asia-east1-docker.pkg.dev
+
+
+打标签并推送：
+
+docker tag myapp:1.0 asia-east1-docker.pkg.dev/PROJECT_ID/my-repo/myapp:1.0
+docker push asia-east1-docker.pkg.dev/PROJECT_ID/my-repo/myapp:1.0
+
+6. 部署到 Cloud Run
+gcloud run deploy myapp \
+  --image asia-east1-docker.pkg.dev/PROJECT_ID/my-repo/myapp:1.0 \
+  --region asia-east1 \
+  --platform managed \
+  --allow-unauthenticated
+
+
+部署成功后，会返回一个公共 URL，例如：
+https://myapp-xxxxx-asia-east1.run.app
+
+7. （可选）连接 Cloud SQL
+
+创建数据库实例（PostgreSQL）：
+
+gcloud sql instances create app-postgres \
+  --database-version=POSTGRES_15 \
+  --tier=db-custom-1-3840 \
+  --region=asia-east1
+gcloud sql databases create appdb --instance=app-postgres
+gcloud sql users create appuser --instance=app-postgres --password="YourPass123!"
+
+
+部署时添加参数：
+
+gcloud run deploy myapp \
+  --image asia-east1-docker.pkg.dev/PROJECT_ID/my-repo/myapp:1.0 \
+  --region asia-east1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --add-cloudsql-instances PROJECT_ID:asia-east1:app-postgres \
+  --set-env-vars DATABASE_URL="postgresql://appuser:YourPass123!@localhost:5432/appdb"
+
+8. （可选）前端静态站点 + API 反代
+
+初始化 Firebase Hosting：
+
+firebase init hosting
+
+
+修改 firebase.json，将 /api/** 请求转发到 Cloud Run：
+
+{
+  "hosting": {
+    "public": "dist",
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "myapp",
+          "region": "asia-east1"
+        }
+      }
+    ]
+  }
+}
+
+
+部署前端：
+
+firebase deploy --only hosting
+
+9. 下一步
+
+配置 自定义域名（Firebase Hosting / Cloud Run）
+
+使用 Firebase Auth 处理用户登录
+
+加入 CI/CD（Cloud Build + GitHub Actions）
+
+这样一份文档，你放在项目根目录 README.md 就行，VSCode 里的 AI 插件一读就能快速理解整个流程。
+
+要不要我帮你把这个文档再配上 完整目录结构（含 Dockerfile、配置文件），生成一个最小仓库模板？
