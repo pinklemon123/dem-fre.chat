@@ -27,7 +27,7 @@ export default function AccountClient() {
     <div className="login-container">
       <h2>我的账号</h2>
       <p className="login-tip">当前邮箱：{email}</p>
-      <button onClick={signOut} style={{ width: "95%", padding: ".7rem" }}>
+      <button onClick={signOut} className="primary">
         退出登录
       </button>
     </div>

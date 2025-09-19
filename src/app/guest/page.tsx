@@ -1,8 +1,8 @@
 import Link from "next/link";
 import NavClient from "../../components/NavClient";
-import AccountClient from "../../components/AccountClient";
+import GuestExperience from "../../components/GuestExperience";
 
-export default function AccountPage() {
+export default function GuestPage() {
   return (
     <main>
       <header>
@@ -18,8 +18,7 @@ export default function AccountPage() {
         />
       </header>
       <section>
-        <h2>账号</h2>
-        <AccountClient />
+        <GuestExperience />
       </section>
     </main>
   );
