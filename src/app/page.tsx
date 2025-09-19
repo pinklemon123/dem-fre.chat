@@ -20,15 +20,21 @@ const ranking: Item[] = [
   { title: "管理员", meta: "积分：1600", content: "论坛维护" },
 ];
 
+type Profile = { username: string | null; email: string | null };
+
 type PostRow = {
   id: string;
   title: string;
   content: string;
   created_at: string;
-  profiles: { username: string | null; email: string | null } | null;
+  profiles: Profile[] | null;
 };
 
-async function fetchLatestPosts(): Promise<{ posts: PostRow[]; error: string | null }> {
+type Post = Omit<PostRow, "profiles"> & {
+  profiles: Profile | null;
+};
+
+async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null }> {
   try {
     const supabase = getServerSupabaseClient();
     const { data, error } = await supabase
@@ -37,7 +43,11 @@ async function fetchLatestPosts(): Promise<{ posts: PostRow[]; error: string | n
       .order("created_at", { ascending: false })
       .limit(20);
     if (error) throw error;
-    return { posts: (data as PostRow[]) ?? [], error: null };
+    const posts = ((data as PostRow[] | null) ?? []).map((row) => ({
+      ...row,
+      profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
+    }));
+    return { posts, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "加载帖子失败";
     console.error("Failed to load posts", error);
@@ -45,9 +55,9 @@ async function fetchLatestPosts(): Promise<{ posts: PostRow[]; error: string | n
   }
 }
 
-function formatAuthor(post: PostRow) {
-  const username = post.profiles?.username;
-  const email = post.profiles?.email;
+function formatAuthor(post: Post) {
+  const username = post.profiles?.username ?? null;
+  const email = post.profiles?.email ?? null;
   if (username) return username;
   if (email) return email.split("@")[0];
   return "匿名用户";
