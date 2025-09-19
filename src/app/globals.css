@@ -555,6 +555,7 @@ footer {
   margin: 0;
   color: #5f7393;
   font-size: 0.98rem;
+
 }
 .auth-toggle {
   display: inline-flex;
@@ -564,6 +565,7 @@ footer {
   gap: 0.25rem;
   align-self: flex-start;
 }
+
 .auth-toggle button {
   border: none;
   background: transparent;
@@ -743,6 +745,7 @@ footer {
 }
 .guest-post-actions .link-button {
   margin-left: 0;
+
 }
 @media (max-width: 960px) {
   .home-hero {
@@ -761,6 +764,7 @@ footer {
     flex-wrap: wrap;
     justify-content: flex-end;
   }
+
 }
 @media (max-width: 700px) {
   main {
@@ -798,5 +802,17 @@ footer {
   }
   .login-container {
     padding: 2rem 1.6rem;
+
+  }
+  .auth-layout {
+    margin: 2rem 0;
+    grid-template-columns: 1fr;
+  }
+  .auth-hero {
+    padding: 2rem 1.75rem;
+  }
+  .login-container {
+    padding: 2rem 1.6rem;
+
   }
 }
