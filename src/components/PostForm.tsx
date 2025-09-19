@@ -54,7 +54,7 @@ export default function PostForm() {
   return (
     <div className="login-container" style={{ maxWidth: 600 }}>
       <h2>发布新帖子</h2>
-      <form onSubmit={submit}>
+      <form className="auth-form" onSubmit={submit}>
         <input
           type="text"
           placeholder="标题"
@@ -67,9 +67,9 @@ export default function PostForm() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           required
-          style={{ width: "95%", height: 160, padding: ".7rem", border: "1px solid #b3c6e6", borderRadius: 4 }}
+          style={{ width: "100%", height: 160, padding: ".7rem", border: "1px solid #b3c6e6", borderRadius: 10 }}
         />
-        <button type="submit" disabled={loading}>
+        <button type="submit" className="primary" disabled={loading}>
           {loading ? "发布中..." : "发布"}
         </button>
       </form>
