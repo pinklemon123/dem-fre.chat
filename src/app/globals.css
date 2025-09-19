@@ -743,24 +743,7 @@ footer {
 }
 .guest-post-actions .link-button {
   margin-left: 0;
-}
-@media (max-width: 960px) {
-  .home-hero {
-    grid-template-columns: 1fr;
-  }
-  .hero-preview {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  }
-  .home-grid {
-    grid-template-columns: 1fr;
-  }
-  .post-card {
-    padding: 1.2rem;
-  }
-  .nav-auth {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
+
 }
 @media (max-width: 700px) {
   main {
@@ -788,6 +771,16 @@ footer {
   .site-header nav .login-btn,
   .nav-auth {
     margin-left: 0;
+  }
+  .auth-layout {
+    margin: 2rem 0;
+    grid-template-columns: 1fr;
+  }
+  .auth-hero {
+    padding: 2rem 1.75rem;
+  }
+  .login-container {
+    padding: 2rem 1.6rem;
   }
   .auth-layout {
     margin: 2rem 0;
