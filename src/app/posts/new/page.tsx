@@ -5,7 +5,7 @@ import PostForm from "../../../components/PostForm";
 export default function NewPostPage() {
   return (
     <main>
-      <header>
+      <header className="site-header">
         <div className="logo"><Link href="/">论坛Logo</Link></div>
         <NavClient
           links={[

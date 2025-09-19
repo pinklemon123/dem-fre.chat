@@ -5,7 +5,7 @@ import MyPostsClient from "../../components/MyPostsClient";
 export default function MePage() {
   return (
     <main>
-      <header>
+      <header className="site-header">
         <div className="logo"><Link href="/">论坛Logo</Link></div>
         <NavClient
           links={[

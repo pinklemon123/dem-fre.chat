@@ -1,13 +1,12 @@
 import Link from "next/link";
 import NavClient from "../components/NavClient";
+import QuickPostComposer from "../components/QuickPostComposer";
+import { formatRelativeTime } from "../lib/formatRelativeTime";
+import { getServerSupabaseClient } from "../lib/supabase/server";
+
+export const revalidate = 0;
 
 type Item = { title: string; meta: string; content: string };
-
-const hotPosts: Item[] = [
-  { title: "如何提升论坛活跃度？", meta: "作者：小明 | 2025-09-18", content: "大家有什么建议？欢迎讨论～" },
-  { title: "本月热门话题：AI与社会", meta: "作者：AI达人 | 2025-09-17", content: "AI 技术对社会的影响，你怎么看？" },
-  { title: "新用户积分规则说明", meta: "作者：管理员 | 2025-09-16", content: "积分如何获取与排名，详细说明。" },
-];
 
 const factions: Item[] = [
   { title: "技术派", meta: "成员：200+", content: "专注技术交流与分享" },
@@ -21,64 +20,146 @@ const ranking: Item[] = [
   { title: "管理员", meta: "积分：1600", content: "论坛维护" },
 ];
 
-function Card({ item }: { item: Item }) {
+type PostRow = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  profiles: { username: string | null; email: string | null } | null;
+};
+
+async function fetchLatestPosts(): Promise<{ posts: PostRow[]; error: string | null }> {
+  try {
+    const supabase = getServerSupabaseClient();
+    const { data, error } = await supabase
+      .from("posts")
+      .select("id,title,content,created_at,profiles(username,email)")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    return { posts: (data as PostRow[]) ?? [], error: null };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "加载帖子失败";
+    console.error("Failed to load posts", error);
+    return { posts: [], error: message };
+  }
+}
+
+function formatAuthor(post: PostRow) {
+  const username = post.profiles?.username;
+  const email = post.profiles?.email;
+  if (username) return username;
+  if (email) return email.split("@")[0];
+  return "匿名用户";
+}
+
+function InfoCard({ item }: { item: Item }) {
   return (
-    <div className="card">
-      <div className="card-title">{item.title}</div>
-      <div className="card-meta">{item.meta}</div>
-      <div className="card-content">{item.content}</div>
+    <div className="info-card">
+      <div className="info-title">{item.title}</div>
+      <div className="info-meta">{item.meta}</div>
+      <div className="info-content">{item.content}</div>
     </div>
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { posts, error } = await fetchLatestPosts();
+
   return (
-    <main>
-      <header>
+    <main className="home-shell">
+      <header className="site-header">
         <div className="logo"><Link href="/">论坛Logo</Link></div>
         <NavClient
           links={[
             { href: "#hot", label: "热帖" },
+
+
             { href: "/factions", label: "热门派别" },
             { href: "/ranking", label: "用户排行" },
+
             { href: "/guest", label: "游客体验" },
           ]}
           loginHref="/login"
         />
       </header>
 
-      <section id="hot">
-        <h2>🔥 热帖精选</h2>
-        <div className="card-list">
-          {hotPosts.map((it, idx) => (
-            <Card key={idx} item={it} />
-          ))}
+      <section className="home-hero">
+        <div className="hero-copy">
+          <h1>分享观点，连接志同道合的伙伴</h1>
+          <p>
+            登录后即可在社区中发布帖子、参与讨论，还能查看自己的发帖记录。试试新的快速发帖器，几秒钟就能把想法晒出来。
+          </p>
+          <div className="hero-links">
+            <Link href="#hot" className="primary">浏览最新帖子</Link>
+            <Link href="/posts/new" className="ghost">去到完整发帖页</Link>
+          </div>
+        </div>
+        <div className="hero-preview" aria-hidden>
+          <div className="preview-card" />
+          <div className="preview-card" />
+          <div className="preview-card" />
         </div>
       </section>
 
-      <section id="factions">
-        <h2>热门派别</h2>
-        <div className="card-list">
-          {factions.map((it, idx) => (
-            <Card key={idx} item={it} />
-          ))}
-        </div>
-      </section>
+      <div className="home-grid">
+        <section className="post-feed" id="hot">
+          <div className="section-head">
+            <h2>🔥 最新帖子</h2>
+            <span>实时同步社区讨论</span>
+          </div>
+          <QuickPostComposer />
+          {error ? (
+            <p className="feed-empty">{error}</p>
+          ) : posts.length === 0 ? (
+            <p className="feed-empty">暂时还没有帖子，成为第一个发帖的人吧！</p>
+          ) : (
+            <div className="feed-list">
+              {posts.map((post) => (
+                <article className="post-card" key={post.id}>
+                  <header>
+                    <h3>{post.title}</h3>
+                    <span>{formatAuthor(post)}</span>
+                  </header>
+                  <p>{post.content}</p>
+                  <footer>
+                    <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
+                    <Link href={`/posts/${post.id}`} className="ghost" prefetch={false}>
+                      查看详情
+                    </Link>
+                  </footer>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
 
-      <section id="ranking">
-        <h2>用户排行</h2>
-        <div className="card-list">
-          {ranking.map((it, idx) => (
-            <Card key={idx} item={it} />
-          ))}
-        </div>
-      </section>
+        <aside className="home-aside">
+          <section id="factions">
+            <div className="section-head">
+              <h2>热门派别</h2>
+            </div>
+            <div className="info-list">
+              {factions.map((item) => (
+                <InfoCard key={item.title} item={item} />
+              ))}
+            </div>
+          </section>
+          <section id="ranking">
+            <div className="section-head">
+              <h2>用户排行</h2>
+            </div>
+            <div className="info-list">
+              {ranking.map((item) => (
+                <InfoCard key={item.title} item={item} />
+              ))}
+            </div>
+          </section>
+        </aside>
+      </div>
 
       <footer>
-        <p>
-          © 2025 论坛网站
-          <a href="https://www.wyzxwk.com/" target="_blank" rel="noreferrer" />
-        </p>
+        <p>© 2025 论坛网站</p>
       </footer>
     </main>
   );

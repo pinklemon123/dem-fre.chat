@@ -5,7 +5,7 @@ import AccountClient from "../../components/AccountClient";
 export default function AccountPage() {
   return (
     <main>
-      <header>
+      <header className="site-header">
         <div className="logo"><Link href="/">论坛Logo</Link></div>
         <NavClient
           links={[

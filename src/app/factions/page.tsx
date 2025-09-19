@@ -22,7 +22,7 @@ function Card({ item }: { item: Item }) {
 export default function FactionsPage() {
   return (
     <main>
-      <header>
+      <header className="site-header">
         <div className="logo"><Link href="/">论坛Logo</Link></div>
         <NavClient
           links={[

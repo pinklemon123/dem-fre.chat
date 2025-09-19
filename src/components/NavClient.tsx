@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase/client";
 
 type NavLink = { href: string; label: string };
 
@@ -14,7 +16,10 @@ export default function NavClient({
   loginHref: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [active, setActive] = useState<string>(" ");
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const hashIds = useMemo(
     () =>
@@ -60,6 +65,35 @@ export default function NavClient({
     };
   }, [pathname, hashIds]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const syncUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!mounted) return;
+      setUser(data.user ?? null);
+      setLoading(false);
+    };
+
+    syncUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
+
   const isActive = (href: string) => {
     if (href.startsWith("#")) return active === href;
     return active === pathname && href === pathname;
@@ -76,9 +110,17 @@ export default function NavClient({
           {l.label}
         </Link>
       ))}
-      <Link href={loginHref} className="login-btn">
-        登录
-      </Link>
+      {loading ? null : user ? (
+        <div className="nav-auth">
+          <Link href="/posts/new" className="primary">发帖</Link>
+          <Link href="/me" className="ghost">我的</Link>
+          <button type="button" onClick={signOut} className="ghost">退出</button>
+        </div>
+      ) : (
+        <Link href={loginHref} className="login-btn">
+          登录
+        </Link>
+      )}
     </nav>
   );
 }
