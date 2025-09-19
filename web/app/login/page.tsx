@@ -1,9 +1,6 @@
 export default function LoginPage() {
   return (
     <main>
-      {/* 引入全局样式 */}
-      <link rel="stylesheet" href="/css/style.css" />
-      
       <div className="login-container">
         <h2>用户登录</h2>
         <form id="login-form">
