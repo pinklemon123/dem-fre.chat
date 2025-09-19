@@ -27,3 +27,27 @@ using (auth.uid() = user_id);
 -- Run once; if bucket exists this will error, you can ignore or create manually
 -- select storage.create_bucket('avatars', true, 'public');
 
+-- Profiles table for username-based login lookup
+create table if not exists public.profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  username text unique not null check (length(trim(username)) >= 3),
+  email text unique not null,
+  created_at timestamp with time zone not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- Read: allow selecting username/email pairs (simple demo; consider restricting in prod)
+create policy if not exists "profiles_select_all"
+on public.profiles for select
+using (true);
+
+-- Insert/Update: only the owner can write their row
+create policy if not exists "profiles_insert_own"
+on public.profiles for insert
+with check (auth.uid() = user_id);
+
+create policy if not exists "profiles_update_own"
+on public.profiles for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);

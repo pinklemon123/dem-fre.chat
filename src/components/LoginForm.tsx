@@ -4,7 +4,9 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase/client";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // 邮箱或用户名
+  const [email, setEmail] = useState(""); // 注册用邮箱
+  const [username, setUsername] = useState(""); // 注册用用户名
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -16,12 +18,33 @@ export default function LoginForm() {
     setMessage(null);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        // 支持邮箱或用户名登录
+        let emailToUse = identifier;
+        if (!identifier.includes("@")) {
+          const { data: prof, error: qErr } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("username", identifier)
+            .maybeSingle();
+          if (qErr) throw qErr;
+          if (!prof?.email) throw new Error("未找到该用户名");
+          emailToUse = prof.email;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({ email: emailToUse, password });
         if (error) throw error;
         setMessage("登录成功");
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        // 注册：收集邮箱 + 用户名 + 密码
+        if (!username.trim()) throw new Error("请填写用户名");
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
+
+        // 如果开启了邮件验证，注册后可能没有 session，这里仅尝试写入，不保证一定成功
+        const uid = data.user?.id;
+        if (uid) {
+          await supabase.from("profiles").upsert({ user_id: uid, username: username.trim(), email });
+        }
         setMessage("注册成功，请查收验证邮件");
       }
     } catch (err: unknown) {
@@ -36,13 +59,33 @@ export default function LoginForm() {
     <div className="login-container">
       <h2>{mode === "signin" ? "用户登录" : "注册账号"}</h2>
       <form id="login-form" onSubmit={onSubmit}>
-        <input
-          type="email"
-          placeholder="邮箱"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        {mode === "signin" ? (
+          <input
+            type="text"
+            placeholder="邮箱或用户名"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            required
+          />
+        ) : (
+          <>
+            <input
+              type="text"
+              placeholder="用户名（3 个字符以上）"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <input
+              type="email"
+              placeholder="邮箱"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </>
+        )}
+
         <input
           type="password"
           placeholder="密码"
