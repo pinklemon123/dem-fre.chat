@@ -51,3 +51,34 @@ create policy if not exists "profiles_update_own"
 on public.profiles for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+-- Posts table: only logged-in users can create; public readable
+create table if not exists public.posts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null check (length(trim(title)) > 0),
+  content text not null check (length(trim(content)) > 0),
+  created_at timestamp with time zone not null default now()
+);
+
+alter table public.posts enable row level security;
+
+-- Read: anyone can read posts (you can restrict to authenticated only if desired)
+create policy if not exists "posts_select_all"
+on public.posts for select
+using (true);
+
+-- Insert: only authenticated users; must write with their own user_id
+create policy if not exists "posts_insert_own"
+on public.posts for insert
+with check (auth.uid() = user_id);
+
+-- Optional: allow users to update/delete自己的帖子
+create policy if not exists "posts_update_own"
+on public.posts for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+create policy if not exists "posts_delete_own"
+on public.posts for delete
+using (auth.uid() = user_id);
