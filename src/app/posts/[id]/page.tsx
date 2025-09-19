@@ -7,15 +7,21 @@ import { getServerSupabaseClient } from "../../../lib/supabase/server";
 
 export const revalidate = 0;
 
+type Profile = { username: string | null; email: string | null };
+
 type PostRow = {
   id: string;
   title: string;
   content: string;
   created_at: string;
-  profiles: { username: string | null; email: string | null } | null;
+  profiles: Profile[] | null;
 };
 
-async function fetchPost(id: string): Promise<PostRow | null> {
+type Post = Omit<PostRow, "profiles"> & {
+  profiles: Profile | null;
+};
+
+async function fetchPost(id: string): Promise<Post | null> {
   try {
     const supabase = getServerSupabaseClient();
     const { data, error } = await supabase
@@ -25,16 +31,21 @@ async function fetchPost(id: string): Promise<PostRow | null> {
       .maybeSingle();
 
     if (error) throw error;
-    return (data as PostRow | null) ?? null;
+    const row = (data as PostRow | null) ?? null;
+    if (!row) return null;
+    return {
+      ...row,
+      profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
+    };
   } catch (error) {
     console.error("Failed to fetch post", error);
     return null;
   }
 }
 
-function formatAuthor(post: PostRow) {
-  const username = post.profiles?.username;
-  const email = post.profiles?.email;
+function formatAuthor(post: Post) {
+  const username = post.profiles?.username ?? null;
+  const email = post.profiles?.email ?? null;
   if (username) return username;
   if (email) return email.split("@")[0];
   return "匿名用户";
