@@ -3,16 +3,15 @@ import type { NextConfig } from "next";
 const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH?.trim();
 const normalizedBasePath =
   rawBasePath && rawBasePath !== "/"
-    ? rawBasePath.replace(/\/+$/, "")
+
+    ? `/${rawBasePath.replace(/^\/+|\/+$/g, "")}`
     : "";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  output: "export",
-  trailingSlash: true,
-  images: {
-    unoptimized: true,
-  },
+
+    ? rawBasePath.replace(/\/+$/, "")
+    : "";
+
   ...(normalizedBasePath
     ? {
         basePath: normalizedBasePath,

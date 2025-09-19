@@ -6,6 +6,8 @@ export default function GuestPage() {
   return (
     <main>
 
+      <header className="site-header">
+
         <div className="logo"><Link href="/">论坛Logo</Link></div>
         <NavClient
           links={[
