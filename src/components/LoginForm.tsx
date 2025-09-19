@@ -24,8 +24,9 @@ export default function LoginForm() {
         if (error) throw error;
         setMessage("注册成功，请查收验证邮件");
       }
-    } catch (err: any) {
-      setMessage(err?.message ?? "操作失败");
+    } catch (err: unknown) {
+      if (err instanceof Error) setMessage(err.message);
+      else setMessage("操作失败");
     } finally {
       setLoading(false);
     }
@@ -70,4 +71,3 @@ export default function LoginForm() {
     </div>
   );
 }
-
