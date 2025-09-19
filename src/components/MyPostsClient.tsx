@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase/client";
@@ -38,7 +39,7 @@ export default function MyPostsClient() {
         <div className="card-title">我的账号</div>
         <div className="card-content">{email ?? "-"}</div>
         <div className="card-meta">
-          <a href="/posts/new" className="login-btn">去发帖</a>
+          <Link href="/posts/new" className="primary">去发帖</Link>
         </div>
       </div>
 

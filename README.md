@@ -16,6 +16,18 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Deploying under a sub-path (e.g. GitHub Pages)
+
+By default the app assumes it is deployed from the domain root (as on Vercel).
+If you need to serve the static export from a sub-path, set the `NEXT_PUBLIC_BASE_PATH`
+environment variable before building, for example:
+
+```bash
+NEXT_PUBLIC_BASE_PATH=/dem-fre.chat npm run build
+```
+
+This will ensure the generated assets use the correct base path.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

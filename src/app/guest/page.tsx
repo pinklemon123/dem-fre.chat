@@ -1,8 +1,8 @@
 import Link from "next/link";
 import NavClient from "../../components/NavClient";
-import MyPostsClient from "../../components/MyPostsClient";
+import GuestExperience from "../../components/GuestExperience";
 
-export default function MePage() {
+export default function GuestPage() {
   return (
     <main>
       <header className="site-header">
@@ -18,7 +18,7 @@ export default function MePage() {
         />
       </header>
       <section>
-        <MyPostsClient />
+        <GuestExperience />
       </section>
     </main>
   );
