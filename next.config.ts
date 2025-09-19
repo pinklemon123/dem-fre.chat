@@ -1,23 +1,28 @@
 import type { NextConfig } from "next";
 
-const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH?.trim();
-const normalizedBasePath =
-  rawBasePath && rawBasePath !== "/"
+let rawBasePath: string | undefined;
 
-    ? `/${rawBasePath.replace(/^\/+|\/+$/g, "")}`
-    : "";
+if (typeof process.env.NEXT_PUBLIC_BASE_PATH === "string") {
+  const envValue = process.env.NEXT_PUBLIC_BASE_PATH.trim();
 
-const nextConfig: NextConfig = {
+  if (envValue.length > 0) {
+    rawBasePath = envValue;
+  }
+}
 
-    ? rawBasePath.replace(/\/+$/, "")
-    : "";
+let normalizedBasePath = "";
 
-  ...(normalizedBasePath
-    ? {
-        basePath: normalizedBasePath,
-        assetPrefix: `${normalizedBasePath}/`,
-      }
-    : {}),
-};
+if (typeof rawBasePath === "string") {
+  if (rawBasePath !== "/") {
+    normalizedBasePath = `/${rawBasePath.replace(/^\/+|\/+$/g, "")}`;
+  }
+}
+
+const nextConfig: NextConfig = {};
+
+if (normalizedBasePath) {
+  nextConfig.basePath = normalizedBasePath;
+  nextConfig.assetPrefix = `${normalizedBasePath}/`;
+}
 
 export default nextConfig;
