@@ -245,3 +245,132 @@ export default function LoginForm() {
     </div>
   );
 }
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../lib/supabase/client";
+
+export default function LoginForm() {
+  const router = useRouter();
+
+  // 登录：邮箱或用户名
+  const [identifier, setIdentifier] = useState("");
+  // 注册：邮箱与用户名
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [message, setMessage] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+    try {
+      if (mode === "signin") {
+        // 支持邮箱或用户名登录：用户名需从 profiles 映射到邮箱
+        let emailToUse = identifier;
+        if (!identifier.includes("@")) {
+          const { data: prof, error: qErr } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("username", identifier)
+            .maybeSingle();
+          if (qErr) throw qErr;
+          if (!prof?.email) throw new Error("未找到该用户名");
+          emailToUse = prof.email;
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+          email: emailToUse,
+          password,
+        });
+        if (error) throw error;
+        // 登录成功后跳转首页
+        router.replace("/");
+        return;
+      }
+
+      // 注册：收集用户名 + 邮箱 + 密码
+      if (!username.trim()) throw new Error("请填写用户名");
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+
+      // 若开启邮箱验证，注册后通常无 session；仅尝试写入 profiles
+      const uid = data.user?.id;
+      if (uid) {
+        await supabase
+          .from("profiles")
+          .upsert({ user_id: uid, username: username.trim(), email });
+      }
+      setMessage("注册成功，请查收验证邮件");
+      setMode("signin");
+    } catch (err: unknown) {
+      if (err instanceof Error) setMessage(err.message);
+      else setMessage("操作失败");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <h2>{mode === "signin" ? "用户登录" : "注册账号"}</h2>
+      <form id="login-form" onSubmit={onSubmit}>
+        {mode === "signin" ? (
+          <input
+            type="text"
+            placeholder="邮箱或用户名"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            required
+          />
+        ) : (
+          <>
+            <input
+              type="text"
+              placeholder="用户名（3 个字符以上）"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <input
+              type="email"
+              placeholder="邮箱"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </>
+        )}
+
+        <input
+          type="password"
+          placeholder="密码"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? "处理中..." : mode === "signin" ? "登录" : "注册"}
+        </button>
+      </form>
+      {message && <p className="login-tip">{message}</p>}
+      <p className="login-tip">
+        {mode === "signin" ? (
+          <>
+            尚未注册？
+            <a href="#" onClick={() => setMode("signup")}>去注册</a>
+          </>
+        ) : (
+          <>
+            已有账号？
+            <a href="#" onClick={() => setMode("signin")}>去登录</a>
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
