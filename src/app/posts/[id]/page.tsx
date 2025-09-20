@@ -3,19 +3,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import NavClient from "../../../components/NavClient";
 import { formatRelativeTime } from "../../../lib/formatRelativeTime";
+import {
+  formatPostAuthor,
+  normalizePostRow,
+  type Post,
+  type PostRow,
+} from "../../../lib/posts";
 import { getServerSupabaseClient } from "../../../lib/supabase/server";
 
 export const revalidate = 0;
 
-type PostRow = {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  profiles: { username: string | null; email: string | null } | null;
-};
-
-async function fetchPost(id: string): Promise<PostRow | null> {
+async function fetchPost(id: string): Promise<Post | null> {
   try {
     const supabase = getServerSupabaseClient();
     const { data, error } = await supabase
@@ -25,19 +23,11 @@ async function fetchPost(id: string): Promise<PostRow | null> {
       .maybeSingle();
 
     if (error) throw error;
-    return (data as PostRow | null) ?? null;
+    return normalizePostRow((data as PostRow | null) ?? null);
   } catch (error) {
     console.error("Failed to fetch post", error);
     return null;
   }
-}
-
-function formatAuthor(post: PostRow) {
-  const username = post.profiles?.username;
-  const email = post.profiles?.email;
-  if (username) return username;
-  if (email) return email.split("@")[0];
-  return "匿名用户";
 }
 
 export default async function PostDetailPage({ params }: { params: { id: string } }) {
@@ -65,7 +55,7 @@ export default async function PostDetailPage({ params }: { params: { id: string 
         <div className="post-detail-head">
           <h1>{post.title}</h1>
           <div className="post-detail-meta">
-            <span>{formatAuthor(post)}</span>
+            <span>{formatPostAuthor(post)}</span>
             <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
           </div>
         </div>
@@ -89,7 +79,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return { title: "帖子不存在 - 论坛社区" };
   }
 
-  const author = formatAuthor(post);
+  const author = formatPostAuthor(post);
   const preview = post.content.length > 80 ? `${post.content.slice(0, 80)}...` : post.content;
 
   return {

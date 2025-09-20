@@ -2,6 +2,12 @@ import Link from "next/link";
 import NavClient from "../components/NavClient";
 import QuickPostComposer from "../components/QuickPostComposer";
 import { formatRelativeTime } from "../lib/formatRelativeTime";
+import {
+  formatPostAuthor,
+  normalizePostRows,
+  type Post,
+  type PostRow,
+} from "../lib/posts";
 import { getServerSupabaseClient } from "../lib/supabase/server";
 
 export const revalidate = 0;
@@ -20,15 +26,7 @@ const ranking: Item[] = [
   { title: "管理员", meta: "积分：1600", content: "论坛维护" },
 ];
 
-type PostRow = {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  profiles: { username: string | null; email: string | null } | null;
-};
-
-async function fetchLatestPosts(): Promise<{ posts: PostRow[]; error: string | null }> {
+async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null }> {
   try {
     const supabase = getServerSupabaseClient();
     const { data, error } = await supabase
@@ -37,20 +35,13 @@ async function fetchLatestPosts(): Promise<{ posts: PostRow[]; error: string | n
       .order("created_at", { ascending: false })
       .limit(20);
     if (error) throw error;
-    return { posts: (data as PostRow[]) ?? [], error: null };
+    const posts = normalizePostRows(data as PostRow[] | null);
+    return { posts, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "加载帖子失败";
     console.error("Failed to load posts", error);
     return { posts: [], error: message };
   }
-}
-
-function formatAuthor(post: PostRow) {
-  const username = post.profiles?.username;
-  const email = post.profiles?.email;
-  if (username) return username;
-  if (email) return email.split("@")[0];
-  return "匿名用户";
 }
 
 function InfoCard({ item }: { item: Item }) {
@@ -118,7 +109,7 @@ export default async function HomePage() {
                 <article className="post-card" key={post.id}>
                   <header>
                     <h3>{post.title}</h3>
-                    <span>{formatAuthor(post)}</span>
+                    <span>{formatPostAuthor(post)}</span>
                   </header>
                   <p>{post.content}</p>
                   <footer>

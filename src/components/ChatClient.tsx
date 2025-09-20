@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { supabase } from "../lib/supabase/client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
 type Message = {
   id: string;
@@ -14,9 +14,25 @@ export default function ChatClient() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [content, setContent] = useState("");
   const [email, setEmail] = useState<string | null>(null);
+  const [clientError, setClientError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const supabase = useMemo(() => {
+    try {
+      return getBrowserSupabaseClient();
+    } catch (error) {
+      console.error("Supabase client unavailable", error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
+    if (!supabase) {
+      setClientError("Supabase 未配置，聊天室功能暂不可用");
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!supabase) return;
     const load = async () => {
       const { data: auth } = await supabase.auth.getUser();
       setEmail(auth.user?.email ?? null);
@@ -45,10 +61,14 @@ export default function ChatClient() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [supabase]);
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) {
+      alert("环境未完成配置，暂时无法发送消息");
+      return;
+    }
     if (!content.trim()) return;
     const { data: auth } = await supabase.auth.getUser();
     const uid = auth.user?.id;
@@ -65,6 +85,7 @@ export default function ChatClient() {
   return (
     <div style={{ maxWidth: 900, margin: "1rem auto", padding: "0 1rem" }}>
       <div className="card" style={{ maxHeight: 420, overflow: "auto" }}>
+        {clientError && <div className="card-content message error">{clientError}</div>}
         {messages.map((m) => (
           <div key={m.id} className="card-content" style={{ marginBottom: 8 }}>
             <b>{m.user_id.slice(0, 8)}</b>: {m.content}

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabase/client";
+import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
 type Post = { id: string; title: string; content: string; created_at: string };
 
@@ -12,8 +12,24 @@ export default function MyPostsClient() {
   const [email, setEmail] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  const supabase = useMemo(() => {
+    try {
+      return getBrowserSupabaseClient();
+    } catch (error) {
+      console.error("Supabase client unavailable", error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
+    if (!supabase) {
+      setClientError("Supabase 未配置，无法加载帖子");
+      setLoading(false);
+      return;
+    }
+
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
@@ -29,9 +45,10 @@ export default function MyPostsClient() {
       setPosts((rows as Post[]) ?? []);
       setLoading(false);
     })();
-  }, [router]);
+  }, [router, supabase]);
 
   if (loading) return <p className="login-tip">加载中...</p>;
+  if (clientError) return <p className="login-tip">{clientError}</p>;
 
   return (
     <div style={{ maxWidth: 900, margin: "1rem auto", padding: "0 1rem" }}>

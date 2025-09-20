@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase/client";
+import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
 type NavLink = { href: string; label: string };
 
@@ -20,6 +20,16 @@ export default function NavClient({
   const [active, setActive] = useState<string>(" ");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  const supabase = useMemo(() => {
+    try {
+      return getBrowserSupabaseClient();
+    } catch (error) {
+      console.error("Supabase client unavailable", error);
+      return null;
+    }
+  }, []);
 
   const hashIds = useMemo(
     () =>
@@ -66,6 +76,12 @@ export default function NavClient({
   }, [pathname, hashIds]);
 
   useEffect(() => {
+    if (!supabase) {
+      setClientError("Supabase 未配置");
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     const syncUser = async () => {
@@ -86,9 +102,10 @@ export default function NavClient({
       mounted = false;
       listener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const signOut = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();
@@ -110,7 +127,7 @@ export default function NavClient({
           {l.label}
         </Link>
       ))}
-      {loading ? null : user ? (
+      {clientError ? null : loading ? null : user ? (
         <div className="nav-auth">
           <Link href="/posts/new" className="primary">发帖</Link>
           <Link href="/me" className="ghost">我的</Link>
