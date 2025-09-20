@@ -45,6 +45,12 @@ type RouteParams = { id: string };
 
 export default async function PostDetailPage({ params }: { params: Promise<RouteParams> }) {
   const { id } = await params;
+
+  if (!isValidId(id)) {
+    notFound();
+    return null;
+  }
+
   const post = await fetchPost(id);
 
 
@@ -91,6 +97,11 @@ export default async function PostDetailPage({ params }: { params: Promise<Route
 
 export async function generateMetadata({ params }: { params: Promise<RouteParams> }): Promise<Metadata> {
   const { id } = await params;
+
+  if (!isValidId(id)) {
+    return { title: "帖子不存在 - 论坛社区" };
+  }
+
   const post = await fetchPost(id);
 
 
