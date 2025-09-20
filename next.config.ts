@@ -1,30 +1,13 @@
 import type { NextConfig } from "next";
 
-let rawBasePath: string | undefined;
-
-if (typeof process.env.NEXT_PUBLIC_BASE_PATH === "string") {
-  const envValue = process.env.NEXT_PUBLIC_BASE_PATH.trim();
-
-  if (envValue.length > 0) {
-    rawBasePath = envValue;
-  }
-}
-
-let normalizedBasePath = "";
-
-if (typeof rawBasePath === "string") {
-  if (rawBasePath !== "/") {
-    normalizedBasePath = `/${rawBasePath.replace(/^\/+|\/+$/g, "")}`;
-  }
-}
-
 const nextConfig: NextConfig = {
-  output: "export",
+  // 为 Vercel 部署配置
+  experimental: {
+    // 确保服务端渲染正常工作
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+  },
+  // 如果需要静态导出，请取消注释下面这行
+  // output: "export",
 };
-
-if (normalizedBasePath) {
-  nextConfig.basePath = normalizedBasePath;
-  nextConfig.assetPrefix = `${normalizedBasePath}/`;
-}
 
 export default nextConfig;
