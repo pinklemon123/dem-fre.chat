@@ -19,7 +19,7 @@ async function fetchPost(id: string): Promise<Post | null> {
     const supabase = getServerSupabaseClient();
     const { data, error } = await supabase
       .from("posts")
-      .select("id,title,content,created_at,profiles(username,email)")
+      .select("id,title,content,created_at,profiles(username,avatar_url)")
       .eq("id", id)
       .maybeSingle();
 
@@ -33,8 +33,11 @@ async function fetchPost(id: string): Promise<Post | null> {
   }
 }
 
-export default async function PostDetailPage({ params }: { params: { id: string } }) {
-  const post = await fetchPost(params.id);
+type RouteParams = { id: string };
+
+export default async function PostDetailPage({ params }: { params: Promise<RouteParams> }) {
+  const { id } = await params;
+  const post = await fetchPost(id);
 
   if (!post) {
     notFound();
@@ -76,8 +79,9 @@ export default async function PostDetailPage({ params }: { params: { id: string 
   );
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const post = await fetchPost(params.id);
+export async function generateMetadata({ params }: { params: Promise<RouteParams> }): Promise<Metadata> {
+  const { id } = await params;
+  const post = await fetchPost(id);
   if (!post) {
     return { title: "帖子不存在 - 论坛社区" };
   }
