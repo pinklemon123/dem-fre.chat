@@ -12,6 +12,36 @@ import { getServerSupabaseClient } from "../lib/supabase/server";
 
 export const revalidate = 0;
 
+/*
+维护者提示（不影响运行）：
+Git 推送到 GitHub：
+1) git init
+2) git remote add origin git@github.com:pinklemon123/dem-fre.chat.git
+3) git add .
+4) git commit -m "chore: init"
+5) git branch -M main
+6) git push -u origin main
+
+必备环境变量（本地 .env.local 与部署平台）：
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY（仅服务端，切勿提交到仓库）
+
+Supabase 数据表与 RLS（在 SQL Editor 执行）：
+- create table public.profiles (... id uuid primary key references auth.users(id) ...);
+- create table public.posts (... author_id uuid references public.profiles(id) ...);
+- alter table public.profiles enable row level security;
+- alter table public.posts enable row level security;
+- 策略：profiles/posts 所有人可读；仅本人可写/改/删（基于 auth.uid()）。
+
+配置完成后：页面会自动启用登录态导航与快速发帖器。
+*/
+
+// 新增：服务端环境变量检测（URL + 匿名或服务角色任一）
+const hasServerSupabase =
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+  Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
 type Item = { title: string; meta: string; content: string };
 
 const factions: Item[] = [
@@ -26,19 +56,58 @@ const ranking: Item[] = [
   { title: "管理员", meta: "积分：1600", content: "论坛维护" },
 ];
 
-
 async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null }> {
+  // 新增：缺少服务端 Supabase 配置时，避免调用 getServerSupabaseClient
+  if (!hasServerSupabase) {
+    console.warn(
+      "[supabase] 服务端环境变量缺失：请设置 NEXT_PUBLIC_SUPABASE_URL 与 NEXT_PUBLIC_SUPABASE_ANON_KEY（或 SUPABASE_SERVICE_ROLE_KEY）。已跳过数据库查询。"
+    );
+    return {
+      posts: [],
+      error: "服务端未配置 Supabase 环境变量，请先在 .env 配置后刷新页面。",
+    };
+  }
+
   try {
     const supabase = getServerSupabaseClient();
-    const { data, error } = await supabase
+
+    // 优先尝试：带 profiles 的联表查询
+    let { data, error } = await supabase
       .from("posts")
       .select("id,title,content,created_at,profiles(username,email)")
       .order("created_at", { ascending: false })
       .limit(20);
-    if (error) throw error;
+
+    // 如果联表失败（常见为外键/关系未建立），自动降级为仅查询 posts 字段
+    if (error) {
+      const msg = (error as any)?.message ?? String(error);
+      const isRelationMissing =
+        typeof msg === "string" &&
+        (msg.toLowerCase().includes("relationship") ||
+          msg.toLowerCase().includes("related") ||
+          msg.toLowerCase().includes("profiles"));
+
+      if (isRelationMissing) {
+        console.warn(
+          "[posts] 关系联查失败，已回退为仅查询 posts。请确认 posts.author_id -> profiles.id 外键与 RLS 策略是否已建立。原始错误：",
+          error
+        );
+        const fallback = await supabase
+          .from("posts")
+          .select("id,title,content,created_at")
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (fallback.error) throw fallback.error;
+        const posts = normalizePostRows(fallback.data as PostRow[] | null);
+        return { posts, error: null };
+      }
+
+      // 其他错误类型：正常抛出并由外层处理
+      throw error;
+    }
 
     const posts = normalizePostRows(data as PostRow[] | null);
-
     return { posts, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "加载帖子失败";
@@ -46,7 +115,6 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
     return { posts: [], error: message };
   }
 }
-
 
 function InfoCard({ item }: { item: Item }) {
   return (
@@ -61,21 +129,40 @@ function InfoCard({ item }: { item: Item }) {
 export default async function HomePage() {
   const { posts, error } = await fetchLatestPosts();
 
+  // 新增：检测公有 Supabase 环境变量是否已配置，避免客户端组件初始化失败
+  const hasPublicSupabase =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
   return (
     <main className="home-shell">
       <header className="site-header">
         <div className="logo"><Link href="/">论坛Logo</Link></div>
-        <NavClient
-          links={[
-            { href: "#hot", label: "热帖" },
-
-            { href: "#factions", label: "热门派别" },
-            { href: "#ranking", label: "用户排行" },
-
-            { href: "/guest", label: "游客体验" },
-          ]}
-          loginHref="/login"
-        />
+        {
+          hasPublicSupabase ? (
+            <NavClient
+              links={[
+                { href: "#hot", label: "热帖" },
+                { href: "#factions", label: "热门派别" },
+                { href: "#ranking", label: "用户排行" },
+                { href: "/guest", label: "游客体验" },
+              ]}
+              loginHref="/login"
+            />
+          ) : (
+            // 降级：静态导航，避免 NavClient 内部访问未配置的 Supabase
+            <nav className="nav-fallback">
+              <ul>
+                <li><Link href="#hot">热帖</Link></li>
+                <li><Link href="#factions">热门派别</Link></li>
+                <li><Link href="#ranking">用户排行</Link></li>
+                <li><Link href="/guest">游客体验</Link></li>
+                {/* 新增：补回登录入口 */}
+                <li><Link href="/login">登录</Link></li>
+              </ul>
+            </nav>
+          )
+        }
       </header>
 
       <section className="home-hero">
@@ -102,7 +189,18 @@ export default async function HomePage() {
             <h2>🔥 最新帖子</h2>
             <span>实时同步社区讨论</span>
           </div>
-          <QuickPostComposer />
+
+          {
+            hasPublicSupabase ? (
+              <QuickPostComposer />
+            ) : (
+              // 降级：发帖器不可用时的提示，不触发客户端 Supabase 初始化
+              <p className="feed-empty">
+                发帖功能未启用：请配置 NEXT_PUBLIC_SUPABASE_URL 与 NEXT_PUBLIC_SUPABASE_ANON_KEY。
+              </p>
+            )
+          }
+
           {error ? (
             <p className="feed-empty">{error}</p>
           ) : posts.length === 0 ? (
