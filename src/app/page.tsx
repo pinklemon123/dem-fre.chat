@@ -72,13 +72,13 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
   try {
     const supabase = getServerSupabaseClient();
 
+    // 先简单查询 posts，不做联表
     const { data, error }: {
       data: PostRow[] | null;
       error: PostgrestError | null;
     } = await supabase
-      // 优先尝试：带 profiles 的联表查询
       .from("posts")
-      .select("id,title,content,created_at,profiles(username,avatar_url)")
+      .select("id, title, content, created_at, user_id")
       .order("created_at", { ascending: false })
       .limit(20);
 
