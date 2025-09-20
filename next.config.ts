@@ -18,7 +18,9 @@ if (typeof rawBasePath === "string") {
   }
 }
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  output: "export",
+};
 
 if (normalizedBasePath) {
   nextConfig.basePath = normalizedBasePath;
