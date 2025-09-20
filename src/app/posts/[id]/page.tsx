@@ -65,6 +65,7 @@ type RouteParams = { id: string };
 export default async function PostDetailPage({ params }: { params: Promise<RouteParams> }) {
   const { id } = await params;
 
+
   const { post, error } = await fetchPost(id);
 
   if (error) {
@@ -145,6 +146,8 @@ export default async function PostDetailPage({ params }: { params: Promise<Route
 
 export async function generateMetadata({ params }: { params: Promise<RouteParams> }): Promise<Metadata> {
   const { id } = await params;
+
+
 
   const { post, error } = await fetchPost(id);
 
