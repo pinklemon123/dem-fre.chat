@@ -10,6 +10,7 @@ import {
   type PostRow,
 } from "../../../lib/posts";
 import { getServerSupabaseClient } from "../../../lib/supabase/server";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 export const revalidate = 0;
 
@@ -20,7 +21,10 @@ const isValidId = (id: string) =>
 async function fetchPost(id: string): Promise<Post | null> {
   try {
     const supabase = getServerSupabaseClient();
-    const { data, error } = await supabase
+    const { data, error }: {
+      data: PostRow | null;
+      error: PostgrestError | null;
+    } = await supabase
       .from("posts")
       .select("id,title,content,created_at,profiles(username,avatar_url)")
       .eq("id", id)
@@ -28,13 +32,14 @@ async function fetchPost(id: string): Promise<Post | null> {
 
     if (error) throw error;
 
-    return normalizePostRow((data as PostRow | null) ?? null);
+
+    return normalizePostRow(data ?? null);
+
   } catch (error) {
     console.error("Failed to fetch post", error);
     return null;
   }
 }
-
 
 type RouteParams = { id: string };
 
@@ -84,10 +89,12 @@ export default async function PostDetailPage({ params }: { params: Promise<Route
   );
 }
 
+<
 
 export async function generateMetadata({ params }: { params: Promise<RouteParams> }): Promise<Metadata> {
   const { id } = await params;
   const post = await fetchPost(id);
+
 
   if (!post) {
     return { title: "帖子不存在 - 论坛社区" };
