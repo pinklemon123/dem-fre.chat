@@ -76,17 +76,11 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
       data: PostRow[] | null;
       error: PostgrestError | null;
     } = await supabase
-
-
-    // 优先尝试：带 profiles 的联表查询
-    let { data, error } = await supabase
-
+      // 优先尝试：带 profiles 的联表查询
       .from("posts")
       .select("id,title,content,created_at,profiles(username,avatar_url)")
       .order("created_at", { ascending: false })
       .limit(20);
-
-    const posts = normalizePostRows(data);
 
     // 如果联表失败（常见为外键/关系未建立），自动降级为仅查询 posts 字段
     if (error) {
