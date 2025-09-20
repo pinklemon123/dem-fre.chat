@@ -9,6 +9,7 @@ import {
   type PostRow,
 } from "../lib/posts";
 import { getServerSupabaseClient } from "../lib/supabase/server";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 export const revalidate = 0;
 
@@ -30,14 +31,17 @@ const ranking: Item[] = [
 async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null }> {
   try {
     const supabase = getServerSupabaseClient();
-    const { data, error } = await supabase
+    const { data, error }: {
+      data: PostRow[] | null;
+      error: PostgrestError | null;
+    } = await supabase
       .from("posts")
-      .select("id,title,content,created_at,profiles(username,email)")
+      .select("id,title,content,created_at,profiles(username,avatar_url)")
       .order("created_at", { ascending: false })
       .limit(20);
     if (error) throw error;
 
-    const posts = normalizePostRows(data as PostRow[] | null);
+    const posts = normalizePostRows(data);
 
     return { posts, error: null };
   } catch (error: unknown) {

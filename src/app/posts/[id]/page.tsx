@@ -10,6 +10,7 @@ import {
   type PostRow,
 } from "../../../lib/posts";
 import { getServerSupabaseClient } from "../../../lib/supabase/server";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 export const revalidate = 0;
 
@@ -17,15 +18,18 @@ export const revalidate = 0;
 async function fetchPost(id: string): Promise<Post | null> {
   try {
     const supabase = getServerSupabaseClient();
-    const { data, error } = await supabase
+    const { data, error }: {
+      data: PostRow | null;
+      error: PostgrestError | null;
+    } = await supabase
       .from("posts")
-      .select("id,title,content,created_at,profiles(username,email)")
+      .select("id,title,content,created_at,profiles(username,avatar_url)")
       .eq("id", id)
       .maybeSingle();
 
     if (error) throw error;
 
-    return normalizePostRow((data as PostRow | null) ?? null);
+    return normalizePostRow(data ?? null);
 
   } catch (error) {
     console.error("Failed to fetch post", error);
@@ -33,8 +37,11 @@ async function fetchPost(id: string): Promise<Post | null> {
   }
 }
 
-export default async function PostDetailPage({ params }: { params: { id: string } }) {
-  const post = await fetchPost(params.id);
+type RouteParams = { id: string };
+
+export default async function PostDetailPage({ params }: { params: Promise<RouteParams> }) {
+  const { id } = await params;
+  const post = await fetchPost(id);
 
   if (!post) {
     notFound();
@@ -76,8 +83,9 @@ export default async function PostDetailPage({ params }: { params: { id: string 
   );
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const post = await fetchPost(params.id);
+export async function generateMetadata({ params }: { params: Promise<RouteParams> }): Promise<Metadata> {
+  const { id } = await params;
+  const post = await fetchPost(id);
   if (!post) {
     return { title: "帖子不存在 - 论坛社区" };
   }
