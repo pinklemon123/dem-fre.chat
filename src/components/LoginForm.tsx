@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../lib/supabase/client";
+import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
 type Mode = "signin" | "signup";
 type Feedback = { type: "success" | "error"; text: string };
@@ -17,6 +17,22 @@ export default function LoginForm() {
   const [mode, setMode] = useState<Mode>("signin");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const router = useRouter();
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  const supabase = useMemo(() => {
+    try {
+      return getBrowserSupabaseClient();
+    } catch (error) {
+      console.error("Supabase client unavailable", error);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) {
+      setClientError("Supabase 未配置，无法完成登录操作");
+    }
+  }, [supabase]);
 
   const switchMode = (nextMode: Mode) => {
     setMode(nextMode);
@@ -29,6 +45,10 @@ export default function LoginForm() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) {
+      setFeedback({ type: "error", text: "环境未完成配置，无法登录或注册" });
+      return;
+    }
     setLoading(true);
     setFeedback(null);
     try {
@@ -101,6 +121,7 @@ export default function LoginForm() {
       <p className="login-subtitle">
         {mode === "signin" ? "输入账号信息，即刻开启今日的讨论。" : "填写信息，加入热闹的论坛社区。"}
       </p>
+      {clientError && <div className="message error">{clientError}</div>}
       {feedback && <div className={`message ${feedback.type}`}>{feedback.text}</div>}
       <form className="auth-form" onSubmit={onSubmit}>
         {mode === "signin" ? (

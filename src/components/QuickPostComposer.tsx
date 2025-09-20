@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase/client";
+import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
 const MIN_CONTENT_LENGTH = 10;
 
@@ -18,8 +18,24 @@ export default function QuickPostComposer() {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  const supabase = useMemo(() => {
+    try {
+      return getBrowserSupabaseClient();
+    } catch (error) {
+      console.error("Supabase client unavailable", error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
+    if (!supabase) {
+      setClientError("Supabase 未配置，无法发布帖子");
+      setHydrated(true);
+      return;
+    }
+
     let mounted = true;
 
     const loadUser = async () => {
@@ -40,7 +56,7 @@ export default function QuickPostComposer() {
       mounted = false;
       listener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const resetForm = () => {
     setTitle("");
@@ -50,6 +66,10 @@ export default function QuickPostComposer() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!supabase) {
+      setFeedback({ type: "error", text: "环境未完成配置，暂时无法发帖" });
+      return;
+    }
     if (!user) return;
 
     const nextTitle = title.trim();
@@ -85,6 +105,15 @@ export default function QuickPostComposer() {
       <div className="composer-card" aria-hidden>
         <div className="composer-title skeleton" />
         <div className="composer-body skeleton" />
+      </div>
+    );
+  }
+
+  if (clientError) {
+    return (
+      <div className="composer-card">
+        <div className="composer-title">快速发布</div>
+        <p className="composer-tip">{clientError}</p>
       </div>
     );
   }

@@ -2,6 +2,12 @@ import Link from "next/link";
 import NavClient from "../components/NavClient";
 import QuickPostComposer from "../components/QuickPostComposer";
 import { formatRelativeTime } from "../lib/formatRelativeTime";
+import {
+  formatPostAuthor,
+  normalizePostRows,
+  type Post,
+  type PostRow,
+} from "../lib/posts";
 import { getServerSupabaseClient } from "../lib/supabase/server";
 
 export const revalidate = 0;
@@ -20,19 +26,6 @@ const ranking: Item[] = [
   { title: "管理员", meta: "积分：1600", content: "论坛维护" },
 ];
 
-type Profile = { username: string | null; email: string | null };
-
-type PostRow = {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  profiles: Profile[] | null;
-};
-
-type Post = Omit<PostRow, "profiles"> & {
-  profiles: Profile | null;
-};
 
 async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null }> {
   try {
@@ -43,10 +36,9 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
       .order("created_at", { ascending: false })
       .limit(20);
     if (error) throw error;
-    const posts = ((data as PostRow[] | null) ?? []).map((row) => ({
-      ...row,
-      profiles: Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles ?? null,
-    }));
+
+    const posts = normalizePostRows(data as PostRow[] | null);
+
     return { posts, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "加载帖子失败";
@@ -55,13 +47,13 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
   }
 }
 
+
 function formatAuthor(post: Post) {
   const username = post.profiles?.username ?? null;
   const email = post.profiles?.email ?? null;
   if (username) return username;
   if (email) return email.split("@")[0];
   return "匿名用户";
-}
 
 function InfoCard({ item }: { item: Item }) {
   return (
@@ -128,7 +120,7 @@ export default async function HomePage() {
                 <article className="post-card" key={post.id}>
                   <header>
                     <h3>{post.title}</h3>
-                    <span>{formatAuthor(post)}</span>
+                    <span>{formatPostAuthor(post)}</span>
                   </header>
                   <p>{post.content}</p>
                   <footer>
