@@ -48,13 +48,6 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
 }
 
 
-function formatAuthor(post: Post) {
-  const username = post.profiles?.username ?? null;
-  const email = post.profiles?.email ?? null;
-  if (username) return username;
-  if (email) return email.split("@")[0];
-  return "匿名用户";
-
 function InfoCard({ item }: { item: Item }) {
   return (
     <div className="info-card">
