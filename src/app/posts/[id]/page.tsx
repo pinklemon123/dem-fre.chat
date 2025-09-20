@@ -89,8 +89,6 @@ export default async function PostDetailPage({ params }: { params: Promise<Route
   );
 }
 
-<
-
 export async function generateMetadata({ params }: { params: Promise<RouteParams> }): Promise<Metadata> {
   const { id } = await params;
   const post = await fetchPost(id);
