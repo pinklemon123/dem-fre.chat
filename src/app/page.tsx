@@ -26,6 +26,7 @@ const ranking: Item[] = [
   { title: "管理员", meta: "积分：1600", content: "论坛维护" },
 ];
 
+
 async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null }> {
   try {
     const supabase = getServerSupabaseClient();
@@ -35,7 +36,9 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
       .order("created_at", { ascending: false })
       .limit(20);
     if (error) throw error;
+
     const posts = normalizePostRows(data as PostRow[] | null);
+
     return { posts, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "加载帖子失败";
@@ -43,6 +46,14 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
     return { posts: [], error: message };
   }
 }
+
+
+function formatAuthor(post: Post) {
+  const username = post.profiles?.username ?? null;
+  const email = post.profiles?.email ?? null;
+  if (username) return username;
+  if (email) return email.split("@")[0];
+  return "匿名用户";
 
 function InfoCard({ item }: { item: Item }) {
   return (

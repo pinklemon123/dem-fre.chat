@@ -13,6 +13,7 @@ import { getServerSupabaseClient } from "../../../lib/supabase/server";
 
 export const revalidate = 0;
 
+
 async function fetchPost(id: string): Promise<Post | null> {
   try {
     const supabase = getServerSupabaseClient();
@@ -23,7 +24,9 @@ async function fetchPost(id: string): Promise<Post | null> {
       .maybeSingle();
 
     if (error) throw error;
+
     return normalizePostRow((data as PostRow | null) ?? null);
+
   } catch (error) {
     console.error("Failed to fetch post", error);
     return null;
