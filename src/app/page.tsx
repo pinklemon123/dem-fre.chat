@@ -74,7 +74,13 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
 
     // 简化查询：先查询基本字段，不联表
     const { data, error }: {
-      data: any[] | null;
+      data: {
+        id: string;
+        title: string;
+        content: string;
+        created_at: string;
+        user_id: string;
+      }[] | null;
       error: PostgrestError | null;
     } = await supabase
       .from("posts")
