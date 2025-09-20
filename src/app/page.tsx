@@ -72,9 +72,9 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
   try {
     const supabase = getServerSupabaseClient();
 
-    // 先简单查询 posts，不做联表
+    // 简化查询：先查询基本字段，不联表
     const { data, error }: {
-      data: PostRow[] | null;
+      data: any[] | null;
       error: PostgrestError | null;
     } = await supabase
       .from("posts")
@@ -82,37 +82,15 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
       .order("created_at", { ascending: false })
       .limit(20);
 
-    // 如果联表失败（常见为外键/关系未建立），自动降级为仅查询 posts 字段
-    if (error) {
-      const msg = error?.message ?? String(error);
-      const isRelationMissing =
-        typeof msg === "string" &&
-        (msg.toLowerCase().includes("relationship") ||
-          msg.toLowerCase().includes("related") ||
-          msg.toLowerCase().includes("profiles"));
+    if (error) throw error;
 
-      if (isRelationMissing) {
-        console.warn(
-          "[posts] 关系联查失败，已回退为仅查询 posts。请确认 posts.author_id -> profiles.id 外键与 RLS 策略是否已建立。原始错误：",
-          error
-        );
-        const fallback = await supabase
-          .from("posts")
-          .select("id,title,content,created_at")
-          .order("created_at", { ascending: false })
-          .limit(20);
+    // 手动转换为 PostRow 格式（添加空的 profiles 字段）
+    const postsWithProfiles: PostRow[] = (data || []).map(post => ({
+      ...post,
+      profiles: null // 暂时设为 null，后续可以优化为分别查询
+    }));
 
-
-        if (fallback.error) throw fallback.error;
-        const posts = normalizePostRows(fallback.data as PostRow[] | null);
-        return { posts, error: null };
-      }
-
-      // 其他错误类型：正常抛出并由外层处理
-      throw error;
-    }
-
-    const posts = normalizePostRows(data as PostRow[] | null);
+    const posts = normalizePostRows(postsWithProfiles);
     return { posts, error: null };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "加载帖子失败";
