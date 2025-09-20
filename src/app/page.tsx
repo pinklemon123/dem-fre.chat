@@ -84,7 +84,7 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
 
     // 如果联表失败（常见为外键/关系未建立），自动降级为仅查询 posts 字段
     if (error) {
-      const msg = (error as any)?.message ?? String(error);
+      const msg = error?.message ?? String(error);
       const isRelationMissing =
         typeof msg === "string" &&
         (msg.toLowerCase().includes("relationship") ||
