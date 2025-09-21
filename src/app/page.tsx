@@ -80,11 +80,13 @@ async function fetchLatestPosts(): Promise<{ posts: Post[]; error: string | null
         content: string;
         created_at: string;
         user_id: string;
+        image_url: string | null;
+        image_alt: string | null;
       }[] | null;
       error: PostgrestError | null;
     } = await supabase
       .from("posts")
-      .select("id, title, content, created_at, user_id")
+      .select("id, title, content, created_at, user_id, image_url, image_alt")
       .order("created_at", { ascending: false })
       .limit(20);
 

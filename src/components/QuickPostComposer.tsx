@@ -100,7 +100,7 @@ export default function QuickPostComposer() {
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${Date.now()}.${fileExt}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('posts-images')
       .upload(fileName, file);
 
@@ -215,6 +215,36 @@ export default function QuickPostComposer() {
           required
           minLength={MIN_CONTENT_LENGTH}
         />
+        
+        {/* 图片上传区域 */}
+        <div className="image-upload-section">
+          <label htmlFor="image-upload" className="image-upload-label">
+            📷 添加图片 (可选)
+          </label>
+          <input
+            id="image-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="image-upload-input"
+          />
+          
+          {imagePreview && (
+            <div className="image-preview">
+              <img src={imagePreview} alt="预览" className="preview-image" />
+              <button 
+                type="button" 
+                onClick={() => {
+                  setSelectedFile(null);
+                  setImagePreview(null);
+                }}
+                className="remove-image"
+              >
+                ✕ 移除图片
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       {feedback && <p className={`composer-feedback ${feedback.type}`}>{feedback.text}</p>}
       <div className="composer-actions">
