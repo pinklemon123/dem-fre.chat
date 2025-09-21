@@ -204,17 +204,28 @@ export default async function HomePage() {
             <div className="feed-list">
               {posts.map((post) => (
                 <article className="post-card" key={post.id}>
-                  <header>
-                    <h3>{post.title}</h3>
-                    <span>{formatPostAuthor(post)}</span>
-                  </header>
-                  <p>{post.content}</p>
-                  <footer>
-                    <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
-                    <Link href={`/posts/${post.id}`} className="ghost" prefetch={false}>
-                      查看详情
-                    </Link>
-                  </footer>
+                  <div className="post-card-content">
+                    <header>
+                      <h3>{post.title}</h3>
+                      <span>{formatPostAuthor(post)}</span>
+                    </header>
+                    <p>{post.content}</p>
+                    <footer>
+                      <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
+                      <Link href={`/posts/${post.id}`} className="ghost" prefetch={false}>
+                        查看详情
+                      </Link>
+                    </footer>
+                  </div>
+                  {post.image_url && (
+                    <div className="post-card-image">
+                      <img 
+                        src={post.image_url} 
+                        alt={post.image_alt || "用户上传的图片"} 
+                        className="post-row-image"
+                      />
+                    </div>
+                  )}
                 </article>
               ))}
             </div>

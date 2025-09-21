@@ -23,7 +23,15 @@ export default function FactionsPage() {
   return (
     <main>
       <header className="site-header">
-        <div className="logo"><Link href="/">论坛Logo</Link></div>
+        <div className="logo">
+          <Link href="/">
+            <img 
+              src="/logo.png" 
+              alt="民主复兴" 
+              className="logo-image"
+            />
+          </Link>
+        </div>
         <NavClient
           links={[
             { href: "/#hot", label: "热帖" },

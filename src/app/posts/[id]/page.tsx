@@ -46,7 +46,7 @@ async function fetchPost(id: string): Promise<FetchPostResult> {
       error: PostgrestError | null;
     } = await supabase
       .from("posts")
-      .select("id,title,content,created_at,profiles(username,avatar_url)")
+      .select("id,title,content,image_url,image_alt,created_at,profiles(username,avatar_url)")
       .eq("id", id)
       .maybeSingle();
 
@@ -72,7 +72,15 @@ export default async function PostDetailPage({ params }: { params: Promise<Route
     return (
       <main className="post-detail-shell">
         <header className="site-header">
-          <div className="logo"><Link href="/">论坛Logo</Link></div>
+          <div className="logo">
+            <Link href="/">
+              <img 
+                src="/logo.png" 
+                alt="民主复兴" 
+                className="logo-image"
+              />
+            </Link>
+          </div>
           <NavClient
             links={[
               { href: "/#hot", label: "热帖" },
@@ -111,7 +119,15 @@ export default async function PostDetailPage({ params }: { params: Promise<Route
   return (
     <main className="post-detail-shell">
       <header className="site-header">
-        <div className="logo"><Link href="/">论坛Logo</Link></div>
+        <div className="logo">
+          <Link href="/">
+            <img 
+              src="/logo.png" 
+              alt="民主复兴" 
+              className="logo-image"
+            />
+          </Link>
+        </div>
         <NavClient
           links={[
             { href: "/#hot", label: "热帖" },
@@ -130,7 +146,18 @@ export default async function PostDetailPage({ params }: { params: Promise<Route
             <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
           </div>
         </div>
-        <div className="post-detail-content">{post.content}</div>
+        <div className="post-detail-content">
+          <div className="post-content-text">{post.content}</div>
+          {post.image_url && (
+            <div className="post-image-container">
+              <img 
+                src={post.image_url} 
+                alt={post.image_alt || "用户上传的图片"} 
+                className="post-image"
+              />
+            </div>
+          )}
+        </div>
         <div className="post-detail-actions">
           <Link href="/" className="ghost">
             返回首页
