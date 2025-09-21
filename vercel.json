@@ -2,6 +2,17 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "functions": {
+    "api/newsbot.js": {
+      "maxDuration": 300
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/newsbot",
+      "schedule": "0 */3 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

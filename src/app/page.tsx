@@ -140,6 +140,7 @@ export default async function HomePage() {
                 { href: "#hot", label: "热帖" },
                 { href: "#factions", label: "热门派别" },
                 { href: "#ranking", label: "用户排行" },
+                { href: "/newsbot", label: "新闻机器人" },
                 { href: "/guest", label: "游客体验" },
               ]}
               loginHref="/login"

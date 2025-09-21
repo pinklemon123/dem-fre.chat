@@ -868,6 +868,260 @@ footer {
   font-size: 0.85rem;
 }
 
+/* 新闻机器人组件样式 */
+.newsbot-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.newsbot-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.newsbot-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: #1976d2;
+  font-size: 2rem;
+}
+
+.newsbot-header p {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.newsbot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+/* 状态卡片 */
+.status-card, .stats-card, .control-card, .config-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.status-card h3, .stats-card h3, .control-card h3, .config-card h3 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-indicator.idle .status-dot {
+  background: #28a745;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.running .status-dot {
+  background: #ffc107;
+  animation: spin 1s linear infinite;
+}
+
+.status-indicator.error .status-dot {
+  background: #dc3545;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.status-text {
+  font-weight: 600;
+  color: #495057;
+}
+
+.last-run {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* 统计网格 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* 手动运行按钮 */
+.manual-run-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.manual-run-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1565c0, #1976d2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.3);
+}
+
+.manual-run-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.control-note {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0;
+  text-align: center;
+}
+
+/* 配置列表 */
+.config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.config-name {
+  font-weight: 600;
+  color: #495057;
+}
+
+.config-status.active {
+  color: #28a745;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 功能特点区域 */
+.newsbot-features {
+  background: #f8f9fa;
+  border-radius: 16px;
+  padding: 2rem;
+}
+
+.newsbot-features h3 {
+  text-align: center;
+  margin: 0 0 2rem 0;
+  color: #495057;
+  font-size: 1.5rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.feature-item {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-4px);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.feature-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1976d2;
+  font-size: 1.1rem;
+}
+
+.feature-item p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .newsbot-container {
+    padding: 1rem;
+  }
+  
+  .newsbot-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .auth-footer {
   display: grid;
   gap: 0.4rem;
@@ -1031,5 +1285,418 @@ footer {
   .login-container {
     padding: 2rem 1.6rem;
 
+  }
+}
+
+/* Task Manager Styles */
+.task-manager {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.task-manager h3 {
+  margin: 0 0 1.5rem 0;
+  color: #1976d2;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.task-manager-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.task-item {
+  border: 1px solid #e0e7ff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #fafbff;
+  transition: all 0.2s ease;
+}
+
+.task-item:hover {
+  border-color: #1976d2;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.task-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #222;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.task-cron {
+  color: #666;
+  font-size: 0.9rem;
+  background: #f0f4ff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.status-indicator {
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.task-details {
+  margin-bottom: 1rem;
+}
+
+.task-times {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.task-error {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+  color: #c62828;
+  font-size: 0.9rem;
+}
+
+.task-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.task-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.task-btn.execute {
+  background: #1976d2;
+  color: white;
+}
+
+.task-btn.execute:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.task-btn.enable {
+  background: #4caf50;
+  color: white;
+}
+
+.task-btn.enable:hover {
+  background: #45a049;
+}
+
+.task-btn.disable {
+  background: #f44336;
+  color: white;
+}
+
+.task-btn.disable:hover {
+  background: #e53935;
+}
+
+@media (max-width: 768px) {
+  .task-manager {
+    margin-top: 2rem;
+    padding: 1.5rem;
+  }
+  
+  .task-item {
+    padding: 1rem;
+  }
+  
+  .task-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .task-actions {
+    flex-direction: column;
+  }
+  
+  .task-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* System Monitor Styles */
+.system-monitor {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.system-monitor h3 {
+  margin: 0 0 1.5rem 0;
+  color: #1976d2;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.system-monitor-loading,
+.system-monitor-error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.system-monitor-error {
+  color: #f44336;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.status-item {
+  padding: 1rem;
+  background: #f8f9ff;
+  border-radius: 8px;
+  border: 1px solid #e3f2fd;
+}
+
+.status-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.status-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.health-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.health-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+.monitor-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #1976d2;
+  color: white;
+}
+
+.monitor-btn:hover {
+  background: #1565c0;
+}
+
+.monitor-btn.secondary {
+  background: #666;
+  color: white;
+}
+
+.monitor-btn.secondary:hover {
+  background: #555;
+}
+
+@media (max-width: 768px) {
+  .system-monitor {
+    margin-top: 2rem;
+    padding: 1.5rem;
+  }
+  
+  .status-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .status-item {
+    padding: 0.75rem;
+  }
+  
+  .quick-actions {
+    flex-direction: column;
+  }
+  
+  .monitor-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* NewsBot Sources Configuration Styles */
+.news-sources-card {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.news-sources-card h3 {
+  margin: 0 0 1.5rem 0;
+  color: #1976d2;
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sources-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.source-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9ff;
+  border-radius: 8px;
+  border: 1px solid #e3f2fd;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.source-name {
+  font-weight: 600;
+  color: #222;
+  flex: 1;
+  min-width: 150px;
+}
+
+.source-status {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.source-info {
+  font-size: 0.8rem;
+  color: #666;
+  flex: 1;
+  text-align: right;
+  min-width: 120px;
+}
+
+.translation-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff3e0;
+  border-radius: 8px;
+  border: 1px solid #ffcc02;
+  flex-wrap: wrap;
+}
+
+.translation-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  background: #2196f3;
+  color: white;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.translation-text {
+  font-size: 0.9rem;
+  color: #f57c00;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .source-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .source-info {
+    text-align: left;
+    min-width: auto;
+  }
+  
+  .translation-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .translation-badge {
+    align-self: flex-start;
   }
 }
