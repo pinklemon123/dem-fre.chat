@@ -55,6 +55,13 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
 }
+
+.logo-image {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1); /* 将图片转为白色以配合深色背景 */
+}
 .site-header nav {
   display: flex;
   align-items: center;

@@ -10,6 +10,8 @@ export type PostRow = {
   title: string;
   content: string;
   created_at: string;
+  image_url: string | null;
+  image_alt: string | null;
   profiles: ProfileRelation;
 };
 

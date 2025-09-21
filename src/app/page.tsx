@@ -126,7 +126,11 @@ export default async function HomePage() {
   return (
     <main className="home-shell">
       <header className="site-header">
-        <div className="logo"><Link href="/">论坛Logo</Link></div>
+        <div className="logo">
+          <Link href="/">
+            <img src="/logo.png" alt="民主复兴论坛" className="logo-image" />
+          </Link>
+        </div>
         {
           hasPublicSupabase ? (
             <NavClient

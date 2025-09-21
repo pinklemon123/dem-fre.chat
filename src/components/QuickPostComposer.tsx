@@ -16,6 +16,8 @@ export default function QuickPostComposer() {
   const [hydrated, setHydrated] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -61,7 +63,57 @@ export default function QuickPostComposer() {
   const resetForm = () => {
     setTitle("");
     setContent("");
+    setSelectedFile(null);
+    setImagePreview(null);
     setFeedback(null);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // 检查文件类型
+    if (!file.type.startsWith('image/')) {
+      setFeedback({ type: "error", text: "请选择图片文件" });
+      return;
+    }
+
+    // 检查文件大小 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setFeedback({ type: "error", text: "图片大小不能超过5MB" });
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // 生成预览
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadImage = async (file: File, userId: string): Promise<string | null> => {
+    if (!supabase) return null;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('posts-images')
+      .upload(fileName, file);
+
+    if (error) {
+      console.error('Upload error:', error);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('posts-images')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -83,10 +135,23 @@ export default function QuickPostComposer() {
     try {
       setLoading(true);
       setFeedback(null);
+      
+      let imageUrl = null;
+      
+      // 如果有选择图片，先上传图片
+      if (selectedFile && user) {
+        imageUrl = await uploadImage(selectedFile, user.id);
+        if (!imageUrl) {
+          throw new Error("图片上传失败，请重试");
+        }
+      }
+
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
         title: nextTitle,
         content: nextContent,
+        image_url: imageUrl,
+        image_alt: selectedFile ? selectedFile.name : null,
       });
       if (error) throw error;
       resetForm();
