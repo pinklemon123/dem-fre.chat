@@ -774,6 +774,100 @@ footer {
   font-size: 0.92rem;
   margin: 0.35rem 0 0;
 }
+
+/* 登录帮助区域样式 */
+.auth-help-section {
+  margin: 1.5rem 0;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.auth-help-section h3 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.help-content p {
+  margin: 0 0 0.8rem 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* 引导图片容器 */
+.help-guide-image {
+  margin: 1rem 0;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.guide-screenshot {
+  max-width: 100%;
+  max-height: 300px;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.guide-screenshot:hover {
+  transform: scale(1.02);
+}
+
+.image-caption {
+  margin: 0.8rem 0 0 0 !important;
+  color: #6c757d !important;
+  font-size: 0.8rem !important;
+  font-style: italic;
+}
+
+.help-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0.8rem 0;
+}
+
+.help-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  border-left: 3px solid #17a2b8;
+}
+
+.tip-label {
+  font-weight: 600;
+  color: #17a2b8;
+  font-size: 0.85rem;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.tip-text {
+  color: #495057;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.help-note {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin: 0.8rem 0 0 0;
+  color: #856404;
+  font-size: 0.85rem;
+}
+
 .auth-footer {
   display: grid;
   gap: 0.4rem;

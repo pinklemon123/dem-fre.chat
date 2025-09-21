@@ -177,6 +177,46 @@ export default function LoginForm() {
           {loading ? "处理中..." : mode === "signin" ? "登录" : "注册"}
         </button>
       </form>
+      
+      <div className="auth-help-section">
+        <h3>📝 参考登录注册</h3>
+        <div className="help-content">
+          <p><strong>没有真实邮箱？试试以下方式：</strong></p>
+          
+          <div className="help-guide-image">
+            <img 
+              src="/login-guide.png" 
+              alt="登录注册引导示例" 
+              className="guide-screenshot"
+              onError={(e) => {
+                // 如果图片加载失败，隐藏整个容器
+                const container = e.currentTarget.closest('.help-guide-image');
+                if (container) {
+                  (container as HTMLElement).style.display = 'none';
+                }
+              }}
+            />
+            <p className="image-caption">参考示例：使用临时邮箱或测试邮箱注册</p>
+          </div>
+          
+          <div className="help-tips">
+            <div className="help-tip">
+              <span className="tip-label">临时邮箱：</span>
+              <span className="tip-text">使用 10minutemail.com 或其他临时邮箱服务</span>
+            </div>
+            <div className="help-tip">
+              <span className="tip-label">测试邮箱：</span>
+              <span className="tip-text">yourname@example.com（可以正常注册，无需验证）</span>
+            </div>
+            <div className="help-tip">
+              <span className="tip-label">快速体验：</span>
+              <span className="tip-text">随意填写邮箱和密码即可注册，立即开始使用</span>
+            </div>
+          </div>
+          <p className="help-note">💡 本论坛主要用于演示，您可以放心试用各种功能</p>
+        </div>
+      </div>
+      
       <div className="auth-footer">
         <p className="login-tip">
           {mode === "signin" ? "还没有账号？" : "已经有账号了？"}
