@@ -6,7 +6,7 @@ import path from 'path';
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response> {
   try {
     // 验证cron请求（可选，增加安全性）
     const authHeader = request.headers.get('authorization')
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 执行Python新闻爬虫脚本
-    return new Promise((resolve) => {
+    return new Promise<Response>((resolve) => {
       const pythonPath = process.env.PYTHON_PATH || 'python'
       const scriptPath = path.join(process.cwd(), 'enhanced-newsbot.py')
       
