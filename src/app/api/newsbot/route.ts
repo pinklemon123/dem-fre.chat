@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabaseClient } from "../../../lib/supabase/server";
+import { spawn } from 'child_process';
+import path from 'path';
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -13,9 +15,6 @@ export async function GET(request: NextRequest) {
     }
 
     // 执行Python新闻爬虫脚本
-    const { spawn } = require('child_process')
-    const path = require('path')
-    
     return new Promise((resolve) => {
       const pythonPath = process.env.PYTHON_PATH || 'python'
       const scriptPath = path.join(process.cwd(), 'enhanced-newsbot.py')
