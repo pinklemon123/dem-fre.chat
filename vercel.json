@@ -3,7 +3,7 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "functions": {
-    "api/newsbot.js": {
+    "app/api/**/*.ts": {
       "maxDuration": 300
     }
   },
