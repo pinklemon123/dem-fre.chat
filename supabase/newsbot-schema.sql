@@ -70,19 +70,23 @@ alter table public.news_task_logs enable row level security;
 alter table public.news_bot_config enable row level security;
 
 -- 读取策略：所有人可读取新闻机器人数据
-create policy if not exists "news_crawl_history_select_all"
+drop policy if exists "news_crawl_history_select_all" on public.news_crawl_history;
+create policy "news_crawl_history_select_all"
 on public.news_crawl_history for select
 using (true);
 
-create policy if not exists "news_content_hashes_select_all"
+drop policy if exists "news_content_hashes_select_all" on public.news_content_hashes;
+create policy "news_content_hashes_select_all"
 on public.news_content_hashes for select
 using (true);
 
-create policy if not exists "news_task_logs_select_all"
+drop policy if exists "news_task_logs_select_all" on public.news_task_logs;
+create policy "news_task_logs_select_all"
 on public.news_task_logs for select
 using (true);
 
-create policy if not exists "news_bot_config_select_all"
+drop policy if exists "news_bot_config_select_all" on public.news_bot_config;
+create policy "news_bot_config_select_all"
 on public.news_bot_config for select
 using (true);
 
