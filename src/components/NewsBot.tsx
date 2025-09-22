@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
 export default function NewsBot() {
@@ -15,11 +15,7 @@ export default function NewsBot() {
 
   const supabase = getBrowserSupabaseClient();
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
@@ -70,7 +66,11 @@ export default function NewsBot() {
     } catch (error) {
       console.error("加载统计数据失败:", error);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   const runManualFetch = async () => {
     setIsManualRunning(true);

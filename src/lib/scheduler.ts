@@ -11,7 +11,7 @@ export interface ScheduledTask {
 
 export class TaskScheduler {
   private tasks: Map<string, ScheduledTask> = new Map();
-  private intervals: Map<string, any> = new Map();
+  private intervals: Map<string, NodeJS.Timeout> = new Map();
 
   constructor() {
     this.initializeTasks();
