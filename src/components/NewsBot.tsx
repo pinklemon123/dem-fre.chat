@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getBrowserSupabaseClient } from "../../lib/supabase/client";
+import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
 export default function NewsBot() {
   const [status, setStatus] = useState<"idle" | "running" | "error">("idle");
