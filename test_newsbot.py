@@ -92,9 +92,14 @@ def check_dependencies():
     
     missing_packages = []
     
+    package_module_map = {
+        'beautifulsoup4': 'bs4',
+    }
+
     for package in required_packages:
+        module_name = package_module_map.get(package, package.replace('-', '_'))
         try:
-            __import__(package.replace('-', '_').replace('4', ''))
+            __import__(module_name)
             print(f"   ✅ {package}")
         except ImportError:
             print(f"   ❌ {package} (缺失)")
