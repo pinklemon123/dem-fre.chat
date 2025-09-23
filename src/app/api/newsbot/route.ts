@@ -17,7 +17,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     // 执行Python新闻爬虫脚本
     return new Promise<Response>((resolve) => {
       const pythonPath = process.env.PYTHON_PATH || 'python'
-      const scriptPath = path.join(process.cwd(), 'enhanced-newsbot.py')
+      const scriptPath = path.join(process.cwd(), 'src', 'lib', 'enhanced_newsbot.py')
       
       const python = spawn(pythonPath, [scriptPath])
       
