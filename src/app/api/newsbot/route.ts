@@ -32,42 +32,71 @@ export async function GET(request: NextRequest): Promise<Response> {
 
       
       const python = spawn(pythonPath, [scriptPath])
-      
+
       let output = ''
       let errorOutput = ''
-      
+      let isResolved = false
+      let timeout: NodeJS.Timeout | null = null
+
+      const clearAndResolve = (response: Response) => {
+        if (isResolved) return
+        isResolved = true
+        if (timeout) {
+          clearTimeout(timeout)
+          timeout = null
+        }
+        resolve(response)
+      }
+
       python.stdout.on('data', (data: Buffer) => {
         output += data.toString()
       })
-      
+
       python.stderr.on('data', (data: Buffer) => {
         errorOutput += data.toString()
       })
-      
+
+      python.on('error', (error: Error) => {
+        console.error('Failed to start Python process:', error)
+        clearAndResolve(NextResponse.json({
+          success: false,
+          error: '新闻机器人启动失败',
+          details: error.message
+        }, { status: 500 }))
+      })
+
       python.on('close', (code: number) => {
+        if (isResolved) return
+        if (timeout) {
+          clearTimeout(timeout)
+          timeout = null
+        }
         if (code === 0) {
-          resolve(NextResponse.json({ 
-            success: true, 
+          clearAndResolve(NextResponse.json({
+            success: true,
             message: '新闻机器人执行成功',
             output: output
           }))
         } else {
           console.error('Python script failed:', errorOutput)
-          resolve(NextResponse.json({ 
-            success: false, 
+          clearAndResolve(NextResponse.json({
+            success: false,
             error: '新闻机器人执行失败',
-            details: errorOutput 
+            details: errorOutput
           }, { status: 500 }))
         }
       })
-      
+
       // 5分钟超时
-      setTimeout(() => {
+      timeout = setTimeout(() => {
+        if (isResolved) return
+        isResolved = true
         python.kill()
-        resolve(NextResponse.json({ 
-          success: false, 
-          error: '新闻机器人执行超时' 
+        resolve(NextResponse.json({
+          success: false,
+          error: '新闻机器人执行超时'
         }, { status: 408 }))
+        timeout = null
       }, 300000)
     })
     
