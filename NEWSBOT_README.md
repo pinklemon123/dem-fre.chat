@@ -37,7 +37,7 @@ src/
 │   └── SystemMonitor.tsx    # 系统状态监控组件
 │
 ├── lib/
-│   ├── enhanced-newsbot.py  # API 调用的增强版新闻机器人脚本
+│   ├── enhanced_newsbot.py  # API 调用的增强版新闻机器人脚本
 │   ├── newsbot.py           # 核心新闻机器人库（Python集成）
 │   ├── scheduler.ts         # 任务调度系统
 │   └── newsbot-config.ts    # 配置管理系统
@@ -106,7 +106,7 @@ NEWSBOT_USER_ID=newsbot_account_id
 pip install selenium beautifulsoup4 openai requests supabase
 ```
 
-> 📌 **重要**：Next.js API 会从 `src/lib/enhanced-newsbot.py` 调用新闻机器人脚本，请确保部署时该文件位于此路径。
+> 📌 **重要**：Next.js API 会从 `src/lib/enhanced_newsbot.py` 调用新闻机器人脚本，请确保部署时该文件位于此路径。
 
 ## 🎛 使用指南
 
