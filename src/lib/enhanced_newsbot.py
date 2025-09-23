@@ -21,6 +21,11 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from supabase import create_client, Client
+
+SUPABASE_URL = "https://jwmdfudbmfustmbcjndm.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3bWRmdWRibWZ1c3RtYmNqbmRtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODI3MjAwOCwiZXhwIjoyMDczODQ4MDA4fQ.eIvKh2vmk4QbdGLFCb_mHfPmc2RYUouAMqgM88BZVeU"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 class EnhancedNewsBot:
     def __init__(self):
@@ -429,27 +434,41 @@ class EnhancedNewsBot:
     def run_once(self) -> Dict:
         """执行一次完整的新闻处理流程"""
         start_time = time.time()
-        
         try:
             # 处理文章
             articles = self.process_articles()
-            
+            articles_posted = 0
+            for article in articles:
+                post_data = {
+                    "title": article['title_zh'],
+                    "content": article['forum_post']['content'],
+                    "category": article['category'],
+                    "source": article['source'],
+                    "original_url": article['original_url'],
+                    "user_id": "c4b3b7cc-ec4d-470f-9623-f796208af7e8",
+                    "is_bot_post": True,
+                    "created_at": article['forum_post']['created_at']
+                }
+                try:
+                    resp = supabase.table("posts").insert(post_data).execute()
+                    if hasattr(resp, 'status_code') and resp.status_code in [200, 201]:
+                        articles_posted += 1
+                except Exception as e:
+                    print(f"❌ 发帖失败: {e}")
             # 统计信息
             stats = {
                 'success': True,
                 'articles_processed': len(articles),
-                'articles_posted': 0,  # 实际发布时更新
+                'articles_posted': articles_posted,
                 'processing_time': round(time.time() - start_time, 2),
                 'timestamp': datetime.now().isoformat(),
                 'articles': articles
             }
-            
             print(f"📊 运行统计:")
             print(f"   处理文章: {stats['articles_processed']} 篇")
+            print(f"   成功发帖: {stats['articles_posted']} 篇")
             print(f"   处理时间: {stats['processing_time']} 秒")
-            
             return stats
-            
         except Exception as e:
             return {
                 'success': False,
