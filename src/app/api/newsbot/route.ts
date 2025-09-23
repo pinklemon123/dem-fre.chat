@@ -19,7 +19,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     return new Promise<Response>((resolve) => {
       const pythonPath = process.env.PYTHON_PATH || 'python'
 
-      const scriptPath = path.join(process.cwd(), 'src', 'lib', 'enhanced-newsbot.py')
+      const scriptPath = path.join(process.cwd(), 'src', 'lib', 'enhanced_newsbot.py')
 
       if (!existsSync(scriptPath)) {
         console.error('Python script not found at path:', scriptPath)
