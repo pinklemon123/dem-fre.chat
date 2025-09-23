@@ -34,6 +34,8 @@ PYTHON_PATH=python3                # Python执行路径
 CRON_SECRET=你的随机密钥           # 增强定时任务安全性
 ```
 
+> 🔐 **安全提醒**：在 Supabase 控制台轮换旧的服务角色密钥（Settings → API → Service Role）后，务必将新的 `SUPABASE_SERVICE_ROLE_KEY`、`NEXT_PUBLIC_SUPABASE_URL` 等环境变量同步更新到 Vercel 或其他部署平台，并触发一次重新部署，确保代码始终使用最新凭据。
+
 ### 2. 数据库初始化
 - 在Supabase SQL编辑器中执行 `newsbot-schema.sql`
 - 系统会自动创建所需的表和策略
