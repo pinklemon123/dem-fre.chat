@@ -23,9 +23,28 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from supabase import create_client, Client
 
-SUPABASE_URL = "https://jwmdfudbmfustmbcjndm.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3bWRmdWRibWZ1c3RtYmNqbmRtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODI3MjAwOCwiZXhwIjoyMDczODQ4MDA4fQ.eIvKh2vmk4QbdGLFCb_mHfPmc2RYUouAMqgM88BZVeU"
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+_supabase_client: Optional[Client] = None
+
+
+def _get_supabase_client() -> Client:
+    """Create (or reuse) the Supabase client using environment variables."""
+    global _supabase_client
+
+    if _supabase_client is not None:
+        return _supabase_client
+
+    supabase_url = os.getenv("SUPABASE_URL")
+    if not supabase_url:
+        raise RuntimeError("Missing SUPABASE_URL environment variable for Supabase connection")
+
+    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    if not supabase_key:
+        raise RuntimeError(
+            "Missing SUPABASE_SERVICE_ROLE_KEY environment variable for Supabase connection"
+        )
+
+    _supabase_client = create_client(supabase_url, supabase_key)
+    return _supabase_client
 
 class EnhancedNewsBot:
     def __init__(self):
@@ -87,6 +106,9 @@ class EnhancedNewsBot:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
+
+        # Supabase 客户端
+        self.supabase = _get_supabase_client()
         
     def fetch_rss_articles(self) -> List[Dict]:
         """从所有RSS源获取新闻文章"""
@@ -450,7 +472,7 @@ class EnhancedNewsBot:
                     "created_at": article['forum_post']['created_at']
                 }
                 try:
-                    resp = supabase.table("posts").insert(post_data).execute()
+                    resp = self.supabase.table("posts").insert(post_data).execute()
                     if hasattr(resp, 'status_code') and resp.status_code in [200, 201]:
                         articles_posted += 1
                 except Exception as e:
