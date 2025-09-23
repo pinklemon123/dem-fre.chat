@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabaseClient } from "../../../lib/supabase/server";
 import { spawn } from 'child_process';
 import path from 'path';
+import { existsSync } from 'fs';
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -17,7 +18,16 @@ export async function GET(request: NextRequest): Promise<Response> {
     // 执行Python新闻爬虫脚本
     return new Promise<Response>((resolve) => {
       const pythonPath = process.env.PYTHON_PATH || 'python'
-      const scriptPath = path.join(process.cwd(), 'enhanced-newsbot.py')
+      const scriptPath = path.join(process.cwd(), 'src', 'lib', 'enhanced-newsbot.py')
+
+      if (!existsSync(scriptPath)) {
+        console.error('Python script not found at path:', scriptPath)
+        resolve(NextResponse.json({
+          success: false,
+          error: '新闻机器人脚本不存在',
+        }, { status: 500 }))
+        return
+      }
       
       const python = spawn(pythonPath, [scriptPath])
       
