@@ -1,0 +1,5 @@
+beautifulsoup4>=4.12.3
+feedparser>=6.0.10
+openai>=1.6.0
+requests>=2.31.0
+supabase>=2.3.4
