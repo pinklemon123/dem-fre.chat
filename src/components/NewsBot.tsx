@@ -12,29 +12,47 @@ export default function NewsBot() {
     lastWeekPosts: 0
   });
   const [isManualRunning, setIsManualRunning] = useState(false);
+  const [botUserId, setBotUserId] = useState<string | null>(
+    () => process.env.NEXT_PUBLIC_NEWS_BOT_USER_ID ?? null
+  );
 
   const supabase = getBrowserSupabaseClient();
 
-  const loadStats = useCallback(async () => {
+  const resolveBotUserId = useCallback(async (): Promise<string | null> => {
+    if (process.env.NEXT_PUBLIC_NEWS_BOT_USER_ID) {
+      return process.env.NEXT_PUBLIC_NEWS_BOT_USER_ID;
+    }
+
+    try {
+      const response = await fetch("/api/newsbot?action=status", { method: "POST" });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch bot status: ${response.status}`);
+      }
+      const payload = await response.json();
+      return payload?.status?.botUserId ?? null;
+    } catch (error) {
+      console.error("获取新闻机器人账号失败:", error);
+      return null;
+    }
+  }, []);
+
+  const loadStats = useCallback(async (botId: string) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
 
-      // 假设新闻机器人的user_id是固定的
-      const botUserId = "newsbot-uuid"; // 这个需要在实际部署时替换
-      
       // 获取总帖子数
       const { data: totalData } = await supabase
         .from("posts")
         .select("id", { count: "exact" })
-        .eq("user_id", botUserId);
+        .eq("user_id", botId);
 
       // 获取今日帖子数
       const today = new Date().toISOString().split('T')[0];
       const { data: todayData } = await supabase
         .from("posts")
         .select("id", { count: "exact" })
-        .eq("user_id", botUserId)
+        .eq("user_id", botId)
         .gte("created_at", `${today}T00:00:00`);
 
       // 获取最近7天帖子数
@@ -42,7 +60,7 @@ export default function NewsBot() {
       const { data: weekData } = await supabase
         .from("posts")
         .select("id", { count: "exact" })
-        .eq("user_id", botUserId)
+        .eq("user_id", botId)
         .gte("created_at", weekAgo);
 
       setStats({
@@ -55,7 +73,7 @@ export default function NewsBot() {
       const { data: lastPost } = await supabase
         .from("posts")
         .select("created_at")
-        .eq("user_id", botUserId)
+        .eq("user_id", botId)
         .order("created_at", { ascending: false })
         .limit(1);
 
@@ -69,8 +87,26 @@ export default function NewsBot() {
   }, [supabase]);
 
   useEffect(() => {
-    loadStats();
-  }, [loadStats]);
+    if (botUserId !== null) return;
+
+    let isMounted = true;
+
+    resolveBotUserId().then((resolved) => {
+      if (isMounted && resolved) {
+        setBotUserId(resolved);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [botUserId, resolveBotUserId]);
+
+  useEffect(() => {
+    if (!botUserId) return;
+
+    loadStats(botUserId);
+  }, [botUserId, loadStats]);
 
   const runManualFetch = async () => {
     setIsManualRunning(true);
@@ -80,13 +116,17 @@ export default function NewsBot() {
       // 这里应该调用后端API来执行新闻抓取
       // 由于我们在前端，这里只是演示
       await new Promise(resolve => setTimeout(resolve, 3000)); // 模拟运行
-      
+
       setStatus("idle");
       setLastRun(new Date().toISOString());
-      
+
       // 重新加载统计数据
-      await loadStats();
-      
+      const resolvedBotId = botUserId ?? await resolveBotUserId();
+      if (resolvedBotId) {
+        setBotUserId(resolvedBotId);
+        await loadStats(resolvedBotId);
+      }
+
     } catch (error) {
       console.error("手动运行失败:", error);
       setStatus("error");

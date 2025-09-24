@@ -139,9 +139,16 @@ export async function POST(request: NextRequest) {
 async function getBotStatus() {
   try {
     const supabase = getServerSupabaseClient();
-    
-    // 假设新闻机器人的用户ID（实际部署时需要创建专门的机器人账号）
-    const botUserId = process.env.NEWS_BOT_USER_ID || "newsbot-uuid";
+
+    // 获取新闻机器人的用户ID，确保和前后端配置一致
+    const botUserId = process.env.NEWS_BOT_USER_ID || process.env.NEXT_PUBLIC_NEWS_BOT_USER_ID;
+
+    if (!botUserId) {
+      return NextResponse.json({
+        success: false,
+        error: "未找到新闻机器人账号 ID，请配置 NEWS_BOT_USER_ID 环境变量。"
+      }, { status: 500 });
+    }
 
     // 获取今日发帖数
     const today = new Date().toISOString().split('T')[0];
@@ -174,6 +181,7 @@ async function getBotStatus() {
     return NextResponse.json({
       success: true,
       status: {
+        botUserId,
         todayPosts: todayPosts?.length || 0,
         totalPosts: totalPosts?.length || 0,
         lastRun: lastPost?.[0]?.created_at || null,
