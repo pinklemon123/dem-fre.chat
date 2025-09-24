@@ -15,15 +15,40 @@ import re
 import json
 import time
 import hashlib
+import logging
 import feedparser
 import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from supabase import create_client, Client
 
 _supabase_client: Optional[Client] = None
+logger = logging.getLogger(__name__)
+
+
+def _mask_secret(value: Optional[str], keep_start: int = 4, keep_end: int = 2) -> str:
+    if not value:
+        return "<missing>"
+
+    if len(value) <= keep_start + keep_end:
+        return "*" * len(value)
+
+    return f"{value[:keep_start]}***{value[-keep_end:]}"
+
+
+def _summarize_supabase_url(url: str) -> str:
+    try:
+        parsed = urlparse(url)
+        host = parsed.netloc or parsed.path
+        if host:
+            scheme = parsed.scheme or "https"
+            return f"{scheme}://{host}"
+    except Exception:
+        pass
+
+    return _mask_secret(url, keep_start=8, keep_end=0)
 
 
 def _get_supabase_client() -> Client:
@@ -34,14 +59,45 @@ def _get_supabase_client() -> Client:
         return _supabase_client
 
     supabase_url = os.getenv("SUPABASE_URL")
+    url_source = "SUPABASE_URL" if supabase_url else None
     if not supabase_url:
-        raise RuntimeError("Missing SUPABASE_URL environment variable for Supabase connection")
+        supabase_url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+        if supabase_url:
+            url_source = "NEXT_PUBLIC_SUPABASE_URL"
+
+    if not supabase_url:
+        raise RuntimeError(
+            "Missing Supabase URL. Set SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL so the Python runtime "
+            "can connect to the same instance as Next.js."
+        )
 
     supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    key_source = "SUPABASE_SERVICE_ROLE_KEY" if supabase_key else None
+    used_fallback_key = False
+    if not supabase_key:
+        supabase_key = os.getenv("SUPABASE_ANON_KEY")
+        if supabase_key:
+            key_source = "SUPABASE_ANON_KEY"
+            used_fallback_key = True
+        else:
+            supabase_key = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+            if supabase_key:
+                key_source = "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+                used_fallback_key = True
+
     if not supabase_key:
         raise RuntimeError(
-            "Missing SUPABASE_SERVICE_ROLE_KEY environment variable for Supabase connection"
+            "Missing Supabase service role key. Set SUPABASE_SERVICE_ROLE_KEY for the Python runtime "
+            "(or provide SUPABASE_ANON_KEY/NEXT_PUBLIC_SUPABASE_ANON_KEY for limited read-only access)."
         )
+
+    masked_key = _mask_secret(supabase_key)
+    summarized_url = _summarize_supabase_url(supabase_url)
+    print(
+        f"🔧 Supabase配置: url={summarized_url} (from {url_source}), key={masked_key} (from {key_source})"
+    )
+    if used_fallback_key:
+        print("⚠️ 使用匿名密钥作为后备凭证，可能无法执行需要 Service Role 权限的操作。")
 
     _supabase_client = create_client(supabase_url, supabase_key)
     return _supabase_client
