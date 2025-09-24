@@ -25,10 +25,12 @@ export async function GET(request: NextRequest): Promise<Response> {
     const pythonPath = resolvePythonPath()
 
     if (!pythonPath) {
+
       console.error('Unable to locate a Python interpreter. Set PYTHON_PATH to a valid executable or configure NEWSBOT_PYTHON_ENDPOINT to use the serverless Python runner.')
       return NextResponse.json({
         success: false,
         error: '未找到可用的 Python 解释器，请检查服务器配置或设置 NEWSBOT_PYTHON_ENDPOINT。'
+
       }, { status: 500 })
     }
 
@@ -125,6 +127,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 }
 
 function resolvePythonPath(): string | null {
+
   const seen = new Set<string>()
   const candidates: string[] = []
 
@@ -204,6 +207,7 @@ function resolvePythonPath(): string | null {
       }
     } catch {
       // Ignore invalid or non-executable candidates and continue checking others.
+
     }
   }
 
@@ -236,11 +240,13 @@ function resolveRemotePythonEndpoint(request: NextRequest): URL | null {
       }
     } catch (error) {
       console.error('Failed to build fallback Python endpoint URL from NEWSBOT_PYTHON_FUNCTION_PATH.', error)
+
     }
   }
 
   return null
 }
+
 
 async function executeViaRemotePython(endpoint: URL, request: NextRequest): Promise<Response> {
   try {
@@ -289,6 +295,7 @@ async function executeViaRemotePython(endpoint: URL, request: NextRequest): Prom
     }, { status: 502 })
   }
 }
+
 
 export async function POST(request: NextRequest) {
   try {
