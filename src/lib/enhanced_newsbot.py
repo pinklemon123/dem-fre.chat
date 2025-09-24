@@ -516,6 +516,16 @@ class EnhancedNewsBot:
             # 处理文章
             articles = self.process_articles()
             articles_posted = 0
+            bot_user_id = (
+                os.getenv("NEWS_BOT_USER_ID")
+                or os.getenv("NEXT_PUBLIC_NEWS_BOT_USER_ID")
+            )
+            if not bot_user_id:
+                raise RuntimeError(
+                    "缺少新闻机器人账号 ID。请在部署环境中配置 NEWS_BOT_USER_ID "
+                    "（或 NEXT_PUBLIC_NEWS_BOT_USER_ID）以指向具有发帖权限的 Supabase 用户。"
+                )
+
             for article in articles:
                 post_data = {
                     "title": article['title_zh'],
@@ -523,7 +533,7 @@ class EnhancedNewsBot:
                     "category": article['category'],
                     "source": article['source'],
                     "original_url": article['original_url'],
-                    "user_id": "c4b3b7cc-ec4d-470f-9623-f796208af7e8",
+                    "user_id": bot_user_id,
                     "is_bot_post": True,
                     "created_at": article['forum_post']['created_at']
                 }
