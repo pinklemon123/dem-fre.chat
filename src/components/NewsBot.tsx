@@ -3,6 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { getBrowserSupabaseClient } from "../lib/supabase/client";
 
+type NewsbotRunResponse = {
+  success?: boolean;
+  message?: string;
+  lastRun?: string | null;
+  error?: string;
+  details?: string;
+};
+
 export default function NewsBot() {
   const [status, setStatus] = useState<"idle" | "running" | "error">("idle");
   const [lastRun, setLastRun] = useState<string | null>(null);
@@ -12,6 +20,7 @@ export default function NewsBot() {
     lastWeekPosts: 0
   });
   const [isManualRunning, setIsManualRunning] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [botUserId, setBotUserId] = useState<string | null>(
     () => process.env.NEXT_PUBLIC_NEWS_BOT_USER_ID ?? null
   );
@@ -111,27 +120,57 @@ export default function NewsBot() {
   const runManualFetch = async () => {
     setIsManualRunning(true);
     setStatus("running");
+    setStatusMessage("正在执行新闻抓取...");
 
     try {
-      // 这里应该调用后端API来执行新闻抓取
-      // 由于我们在前端，这里只是演示
-      await new Promise(resolve => setTimeout(resolve, 3000)); // 模拟运行
+      const { data: sessionData } = await supabase.auth.getSession();
 
-      setStatus("idle");
-      setLastRun(new Date().toISOString());
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      const accessToken = sessionData.session?.access_token;
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
 
-      // 重新加载统计数据
-      const resolvedBotId = botUserId ?? await resolveBotUserId();
-      if (resolvedBotId) {
-        setBotUserId(resolvedBotId);
-        await loadStats(resolvedBotId);
+      const response = await fetch("/api/newsbot?action=run", {
+        method: "POST",
+        headers
+      });
+
+      let payload: NewsbotRunResponse | null = null;
+      try {
+        payload = await response.json();
+      } catch (jsonError) {
+        console.error("解析新闻机器人响应失败:", jsonError);
+      }
+
+      if (response.ok && payload?.success) {
+        setStatus("idle");
+        setLastRun(payload?.lastRun ?? new Date().toISOString());
+        setStatusMessage(payload?.message ?? "新闻机器人执行成功");
+      } else {
+        setStatus("error");
+        const baseMessage =
+          payload?.error ??
+          `手动运行失败${response.ok ? "" : `（HTTP ${response.status}）`}`;
+        const detailMessage = payload?.details ? `：${payload.details}` : "";
+        setStatusMessage(`${baseMessage}${detailMessage}`);
       }
 
     } catch (error) {
       console.error("手动运行失败:", error);
       setStatus("error");
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "手动运行失败，请稍后重试"
+      );
     } finally {
       setIsManualRunning(false);
+      const resolvedBotId = botUserId ?? (await resolveBotUserId());
+      if (resolvedBotId) {
+        setBotUserId(resolvedBotId);
+        await loadStats(resolvedBotId);
+      }
     }
   };
 
@@ -171,6 +210,9 @@ export default function NewsBot() {
             </span>
           </div>
           <p className="last-run">上次运行: {formatDate(lastRun)}</p>
+          {statusMessage && (
+            <p className={`status-message ${status}`}>{statusMessage}</p>
+          )}
         </div>
 
         {/* 统计卡片 */}
