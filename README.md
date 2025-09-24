@@ -36,6 +36,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Supabase configuration for the Newsbot
+
+The Python services that power the Newsbot features must talk to the **same Supabase project** as the Next.js frontend. Make sure
+your deployment environment provides the following variables:
+
+- `NEXT_PUBLIC_SUPABASE_URL` — shared by the Next.js app and the Python runtime. You can also set `SUPABASE_URL` explicitly for
+  Python processes; when omitted, the Python code will reuse `NEXT_PUBLIC_SUPABASE_URL` automatically.
+- `SUPABASE_SERVICE_ROLE_KEY` — **required** for the Python runtime. It enables the background tasks to insert and update data.
+  Anonymous keys (`SUPABASE_ANON_KEY` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`) are only useful for local diagnostics and will trigger a
+  warning because they lack write permissions needed in production.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

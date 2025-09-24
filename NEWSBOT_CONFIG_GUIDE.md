@@ -52,16 +52,21 @@
 
 ## 🛠 快速启动
 
-### 1. 环境变量配置 (可选)
+### 1. 环境变量配置 (必填)
 ```bash
 # AI翻译API (至少配置一个)
 OPENAI_API_KEY=sk-your-openai-key-here
 DEEPSEEK_API_KEY=sk-your-deepseek-key-here
 
-# Supabase配置 (已配置)
+# Supabase配置（Python与Next.js共享同一项目）
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-key
+SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
+
+> ℹ️ **重要**：Python运行环境必须提供 `SUPABASE_SERVICE_ROLE_KEY`，以便定时任务具备写入权限。若缺失，系统会尝试使用
+> 匿名密钥（`SUPABASE_ANON_KEY` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`），但只适用于本地调试，生产环境会因权限不足而受限。
 
 ### 2. 立即测试
 1. 访问 http://localhost:3000/newsbot
