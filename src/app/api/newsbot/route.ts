@@ -119,17 +119,87 @@ export async function GET(request: NextRequest): Promise<Response> {
 }
 
 function resolvePythonPath(): string | null {
-  const candidates = [
-    process.env.PYTHON_PATH,
+
+  const seen = new Set<string>()
+  const candidates: string[] = []
+
+  const register = (value?: string | null) => {
+    if (!value) return
+    const trimmed = value.trim()
+    if (!trimmed || seen.has(trimmed)) return
+    seen.add(trimmed)
+    candidates.push(trimmed)
+  }
+
+  const registerMany = (values: Array<string | undefined | null>) => {
+    for (const value of values) {
+      register(value)
+    }
+  }
+
+  register(process.env.PYTHON_PATH)
+
+  if (process.env.PYTHON_PATHS) {
+    for (const value of process.env.PYTHON_PATHS.split(/[;,:\n]/)) {
+      register(value)
+    }
+  }
+
+  register(process.env.VERCEL_PYTHON)
+  register(process.env.PIPENV_PYTHON)
+
+  if (process.env.PYENV_ROOT) {
+    register(path.join(process.env.PYENV_ROOT, 'shims', 'python3'))
+    register(path.join(process.env.PYENV_ROOT, 'bin', 'python3'))
+  }
+
+  registerMany([
+    'python3.11',
+    'python3.10',
+    'python3.9',
+    'python3.8',
     'python3',
-    'python',
-    'python3.11'
-  ].filter(Boolean) as string[]
+    'python'
+  ])
+
+  registerMany([
+    '/var/task/python/bin/python3',
+    '/var/lang/bin/python3.11',
+    '/var/lang/bin/python3.10',
+    '/var/lang/bin/python3.9',
+    '/usr/local/bin/python3',
+    '/usr/bin/python3'
+  ])
+
+  const pathEntries = (process.env.PATH || '').split(path.delimiter).filter(Boolean)
+  for (const entry of pathEntries) {
+    register(path.join(entry, 'python3'))
+    register(path.join(entry, 'python'))
+  }
+
+  for (const lookup of ['python3', 'python', 'python3.11', 'python3.10', 'python3.9']) {
+    try {
+      const whichResult = spawnSync('which', [lookup])
+      if (!whichResult.error && whichResult.status === 0) {
+        const resolved = whichResult.stdout.toString().trim()
+        if (resolved) {
+          register(resolved)
+        }
+      }
+    } catch {
+      // Ignore environments that do not provide `which`.
+    }
+  }
 
   for (const candidate of candidates) {
-    const result = spawnSync(candidate, ['--version'])
-    if (!result.error && result.status === 0) {
-      return candidate
+    try {
+      const result = spawnSync(candidate, ['--version'], { stdio: 'ignore' })
+      if (!result.error && result.status === 0) {
+        return candidate
+      }
+    } catch {
+      // Ignore invalid or non-executable candidates and continue checking others.
+
     }
   }
 
