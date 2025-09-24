@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabaseClient } from "../../../lib/supabase/server";
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 import { existsSync } from 'fs';
 
@@ -16,8 +16,17 @@ export async function GET(request: NextRequest): Promise<Response> {
     }
 
     // 执行Python新闻爬虫脚本
+    const pythonPath = resolvePythonPath()
+
+    if (!pythonPath) {
+      console.error('Unable to locate a Python interpreter. Set PYTHON_PATH to a valid executable.')
+      return NextResponse.json({
+        success: false,
+        error: '未找到可用的 Python 解释器，请检查服务器配置。'
+      }, { status: 500 })
+    }
+
     return new Promise<Response>((resolve) => {
-      const pythonPath = process.env.PYTHON_PATH || 'python'
 
       const scriptPath = path.join(process.cwd(), 'src', 'lib', 'enhanced_newsbot.py')
 
@@ -107,6 +116,24 @@ export async function GET(request: NextRequest): Promise<Response> {
       error: 'Internal server error' 
     }, { status: 500 })
   }
+}
+
+function resolvePythonPath(): string | null {
+  const candidates = [
+    process.env.PYTHON_PATH,
+    'python3',
+    'python',
+    'python3.11'
+  ].filter(Boolean) as string[]
+
+  for (const candidate of candidates) {
+    const result = spawnSync(candidate, ['--version'])
+    if (!result.error && result.status === 0) {
+      return candidate
+    }
+  }
+
+  return null
 }
 
 export async function POST(request: NextRequest) {
