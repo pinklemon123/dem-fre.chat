@@ -15,14 +15,22 @@ export async function GET(request: NextRequest): Promise<Response> {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const remotePythonEndpoint = resolveRemotePythonEndpoint(request)
+
+    if (remotePythonEndpoint) {
+      return await executeViaRemotePython(remotePythonEndpoint, request)
+    }
+
     // 执行Python新闻爬虫脚本
     const pythonPath = resolvePythonPath()
 
     if (!pythonPath) {
-      console.error('Unable to locate a Python interpreter. Set PYTHON_PATH to a valid executable.')
+
+      console.error('Unable to locate a Python interpreter. Set PYTHON_PATH to a valid executable or configure NEWSBOT_PYTHON_ENDPOINT to use the serverless Python runner.')
       return NextResponse.json({
         success: false,
-        error: '未找到可用的 Python 解释器，请检查服务器配置。'
+        error: '未找到可用的 Python 解释器，请检查服务器配置或设置 NEWSBOT_PYTHON_ENDPOINT。'
+
       }, { status: 500 })
     }
 
@@ -205,6 +213,89 @@ function resolvePythonPath(): string | null {
 
   return null
 }
+
+function resolveRemotePythonEndpoint(request: NextRequest): URL | null {
+  const baseUrl = new URL(request.url)
+  const directConfig = process.env.NEWSBOT_PYTHON_ENDPOINT?.trim()
+
+  if (directConfig) {
+    try {
+      const resolved = new URL(directConfig, baseUrl.origin)
+      if (resolved.href !== baseUrl.href) {
+        return resolved
+      }
+    } catch (error) {
+      console.error('Invalid NEWSBOT_PYTHON_ENDPOINT value. Provide an absolute URL or a path starting with /.', error)
+    }
+  }
+
+  const fallbackPath = (process.env.NEWSBOT_PYTHON_FUNCTION_PATH || '/api/newsbot-python').trim()
+
+  if (process.env.VERCEL && fallbackPath) {
+    try {
+      const pathValue = fallbackPath.startsWith('/') ? fallbackPath : `/${fallbackPath}`
+      const resolved = new URL(pathValue, baseUrl.origin)
+      if (resolved.pathname !== baseUrl.pathname || resolved.search !== baseUrl.search) {
+        return resolved
+      }
+    } catch (error) {
+      console.error('Failed to build fallback Python endpoint URL from NEWSBOT_PYTHON_FUNCTION_PATH.', error)
+
+    }
+  }
+
+  return null
+}
+
+
+async function executeViaRemotePython(endpoint: URL, request: NextRequest): Promise<Response> {
+  try {
+    const headers: Record<string, string> = {
+      'x-newsbot-proxy': '1'
+    }
+
+    const authHeader = request.headers.get('authorization')
+    if (authHeader) {
+      headers['authorization'] = authHeader
+    }
+
+    const remoteResponse = await fetch(endpoint, {
+      method: 'POST',
+      headers
+    })
+
+    const text = await remoteResponse.text()
+    let payload: unknown = null
+
+    if (text) {
+      try {
+        payload = JSON.parse(text)
+      } catch (parseError) {
+        console.error('Remote Python function returned invalid JSON.', parseError, text)
+        return NextResponse.json({
+          success: false,
+          error: 'Python 服务返回了无法解析的响应',
+          details: text
+        }, { status: 502 })
+      }
+    }
+
+    const body = (payload && typeof payload === 'object') ? payload : {
+      success: remoteResponse.ok,
+      data: payload
+    }
+
+    return NextResponse.json(body as Record<string, unknown>, { status: remoteResponse.status })
+  } catch (error) {
+    console.error('Failed to invoke remote Python endpoint for newsbot.', error)
+    return NextResponse.json({
+      success: false,
+      error: '调用 Python 服务失败',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 502 })
+  }
+}
+
 
 export async function POST(request: NextRequest) {
   try {
