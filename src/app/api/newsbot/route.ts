@@ -116,6 +116,16 @@ export async function POST(request: NextRequest) {
     const action = searchParams.get("action");
 
     if (action === "run") {
+      const authResult = await ensureAdmin(request);
+      if (!authResult.ok) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: authResult.error
+          },
+          { status: authResult.status }
+        );
+      }
       // 手动执行新闻抓取
       return await GET(request);
     }
@@ -194,5 +204,48 @@ async function getBotStatus() {
       success: false, 
       error: error instanceof Error ? error.message : "获取状态失败" 
     }, { status: 500 });
+  }
+}
+
+async function ensureAdmin(request: NextRequest): Promise<{
+  ok: boolean;
+  status: number;
+  error?: string;
+}> {
+  const adminList = process.env.NEWS_BOT_ADMIN_IDS;
+  if (!adminList) {
+    return { ok: true, status: 200 };
+  }
+
+  const adminIds = adminList
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (adminIds.length === 0) {
+    return { ok: true, status: 200 };
+  }
+
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { ok: false, status: 401, error: "缺少授权信息" };
+  }
+
+  const token = authHeader.slice("Bearer ".length);
+  try {
+    const supabase = getServerSupabaseClient();
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) {
+      return { ok: false, status: 401, error: "无效的会话" };
+    }
+
+    if (!adminIds.includes(data.user.id)) {
+      return { ok: false, status: 403, error: "无权限执行该操作" };
+    }
+
+    return { ok: true, status: 200 };
+  } catch (error) {
+    console.error("验证管理员权限失败:", error);
+    return { ok: false, status: 500, error: "管理员权限验证失败" };
   }
 }
