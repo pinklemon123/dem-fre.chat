@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabaseClient } from "../../../lib/supabase/server";
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 import { existsSync } from 'fs';
 
@@ -16,8 +16,17 @@ export async function GET(request: NextRequest): Promise<Response> {
     }
 
     // 执行Python新闻爬虫脚本
+    const pythonPath = resolvePythonPath()
+
+    if (!pythonPath) {
+      console.error('Unable to locate a Python interpreter. Set PYTHON_PATH to a valid executable.')
+      return NextResponse.json({
+        success: false,
+        error: '未找到可用的 Python 解释器，请检查服务器配置。'
+      }, { status: 500 })
+    }
+
     return new Promise<Response>((resolve) => {
-      const pythonPath = process.env.PYTHON_PATH || 'python'
 
       const scriptPath = path.join(process.cwd(), 'src', 'lib', 'enhanced_newsbot.py')
 
@@ -107,6 +116,92 @@ export async function GET(request: NextRequest): Promise<Response> {
       error: 'Internal server error' 
     }, { status: 500 })
   }
+}
+
+function resolvePythonPath(): string | null {
+  const seen = new Set<string>()
+  const candidates: string[] = []
+
+  const register = (value?: string | null) => {
+    if (!value) return
+    const trimmed = value.trim()
+    if (!trimmed || seen.has(trimmed)) return
+    seen.add(trimmed)
+    candidates.push(trimmed)
+  }
+
+  const registerMany = (values: Array<string | undefined | null>) => {
+    for (const value of values) {
+      register(value)
+    }
+  }
+
+  register(process.env.PYTHON_PATH)
+
+  if (process.env.PYTHON_PATHS) {
+    for (const value of process.env.PYTHON_PATHS.split(/[;,:\n]/)) {
+      register(value)
+    }
+  }
+
+  register(process.env.VERCEL_PYTHON)
+  register(process.env.PIPENV_PYTHON)
+
+  if (process.env.PYENV_ROOT) {
+    register(path.join(process.env.PYENV_ROOT, 'shims', 'python3'))
+    register(path.join(process.env.PYENV_ROOT, 'bin', 'python3'))
+  }
+
+  registerMany([
+    'python3.11',
+    'python3.10',
+    'python3.9',
+    'python3.8',
+    'python3',
+    'python'
+  ])
+
+  registerMany([
+    '/var/task/python/bin/python3',
+    '/var/lang/bin/python3.11',
+    '/var/lang/bin/python3.10',
+    '/var/lang/bin/python3.9',
+    '/usr/local/bin/python3',
+    '/usr/bin/python3'
+  ])
+
+  const pathEntries = (process.env.PATH || '').split(path.delimiter).filter(Boolean)
+  for (const entry of pathEntries) {
+    register(path.join(entry, 'python3'))
+    register(path.join(entry, 'python'))
+  }
+
+  for (const lookup of ['python3', 'python', 'python3.11', 'python3.10', 'python3.9']) {
+    try {
+      const whichResult = spawnSync('which', [lookup])
+      if (!whichResult.error && whichResult.status === 0) {
+        const resolved = whichResult.stdout.toString().trim()
+        if (resolved) {
+          register(resolved)
+        }
+      }
+    } catch {
+      // Ignore environments that do not provide `which`.
+    }
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const result = spawnSync(candidate, ['--version'], { stdio: 'ignore' })
+      if (!result.error && result.status === 0) {
+        return candidate
+      }
+    } catch {
+      // Ignore invalid or non-executable candidates and continue checking others.
+    }
+  }
+
+  return null
 }
 
 export async function POST(request: NextRequest) {
