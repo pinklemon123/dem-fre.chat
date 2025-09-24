@@ -119,6 +119,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 }
 
 function resolvePythonPath(): string | null {
+
   const seen = new Set<string>()
   const candidates: string[] = []
 
@@ -198,6 +199,7 @@ function resolvePythonPath(): string | null {
       }
     } catch {
       // Ignore invalid or non-executable candidates and continue checking others.
+
     }
   }
 
