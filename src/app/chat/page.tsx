@@ -1,6 +1,6 @@
 import Link from "next/link";
-import NavClient from "../../components/NavClient";
 import ChatClient from "../../components/ChatClient";
+import NavClient from "../../components/NavClient";
 
 export default function ChatPage() {
   return (
@@ -28,11 +28,7 @@ export default function ChatPage() {
         />
       </header>
 
-      <section>
-        <h2>💬 聊天对话</h2>
-        <p>与其他用户聊天或与AI助手对话</p>
-        <ChatClient />
-      </section>
+      <ChatClient />
     </main>
   );
 }
