@@ -147,7 +147,7 @@ export default function ChatClient() {
         const errorMsg: Message = {
           id: `error-${Date.now()}`,
           user_id: "系统",
-          content: data.error || "AI 服务暂时不可用，请稍后再试",
+          content: `${data.error || "AI 服务暂时不可用，请稍后再试"}${data.error?.includes('未配置') || data.error?.includes('无效') ? ' - 点击右上角\"诊断工具\"检查配置' : ''}`,
           created_at: new Date().toISOString(),
           is_ai: true
         };
@@ -158,7 +158,7 @@ export default function ChatClient() {
       const errorMsg: Message = {
         id: `error-${Date.now()}`,
         user_id: "系统",
-        content: "AI 服务暂时不可用，请稍后再试",
+        content: "AI 服务暂时不可用，请稍后再试 - 点击右上角\"诊断工具\"检查配置",
         created_at: new Date().toISOString(),
         is_ai: true
       };
@@ -170,6 +170,24 @@ export default function ChatClient() {
 
   return (
     <div style={{ maxWidth: 900, margin: "1rem auto", padding: "0 1rem" }}>
+      {/* Header with diagnostic link */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <h2 style={{ margin: 0, color: "#333" }}>聊天对话</h2>
+        <a 
+          href="/diagnostic" 
+          style={{ 
+            color: "#4a90e2", 
+            textDecoration: "none",
+            fontSize: "0.9rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem"
+          }}
+        >
+          🔧 诊断工具
+        </a>
+      </div>
+      
       {/* Mode Toggle */}
       <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
         <button
