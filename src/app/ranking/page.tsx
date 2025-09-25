@@ -38,6 +38,7 @@ export default function RankingPage() {
             { href: "/factions", label: "热门派别" },
             { href: "/ranking", label: "用户排行" },
             { href: "/newsbot", label: "新闻机器人" },
+            { href: "/chat", label: "聊天对话" },
             { href: "/guest", label: "游客体验" },
           ]}
           loginHref="/login"

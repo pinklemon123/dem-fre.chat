@@ -24,6 +24,8 @@ export default function NewsBot() {
   const [botUserId, setBotUserId] = useState<string | null>(
     () => process.env.NEXT_PUBLIC_NEWS_BOT_USER_ID ?? null
   );
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   const supabase = getBrowserSupabaseClient();
 
@@ -116,6 +118,28 @@ export default function NewsBot() {
 
     loadStats(botUserId);
   }, [botUserId, loadStats]);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (!autoRefresh || !botUserId) {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        setRefreshInterval(null);
+      }
+      return;
+    }
+
+    const interval = setInterval(() => {
+      loadStats(botUserId);
+    }, 30000); // Refresh every 30 seconds
+
+    setRefreshInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      setRefreshInterval(null);
+    };
+  }, [autoRefresh, botUserId, loadStats, refreshInterval]);
 
   const runManualFetch = async () => {
     setIsManualRunning(true);
@@ -247,6 +271,22 @@ export default function NewsBot() {
           <p className="control-note">
             点击按钮手动触发新闻抓取和发布
           </p>
+          
+          {/* Auto-refresh toggle */}
+          <div className="auto-refresh-control" style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+                style={{ marginRight: "0.5rem" }}
+              />
+              <span>🔄 自动刷新状态 (30秒)</span>
+            </label>
+            <p className="control-note" style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
+              开启后将自动刷新新闻统计和状态，无需手动刷新页面
+            </p>
+          </div>
         </div>
 
         {/* 配置信息 */}
@@ -259,7 +299,7 @@ export default function NewsBot() {
             </div>
             <div className="config-item">
               <span className="config-name">AI摘要</span>
-              <span className="config-status active">OpenAI GPT-4</span>
+              <span className="config-status active">DeepSeek/OpenAI GPT-4</span>
             </div>
             <div className="config-item">
               <span className="config-name">定时任务</span>

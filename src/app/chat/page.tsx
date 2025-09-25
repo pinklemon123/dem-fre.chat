@@ -1,25 +1,8 @@
 import Link from "next/link";
 import NavClient from "../../components/NavClient";
+import ChatClient from "../../components/ChatClient";
 
-type Item = { title: string; meta: string; content: string };
-
-const factions: Item[] = [
-  { title: "技术派", meta: "成员：200+", content: "专注技术交流与分享" },
-  { title: "生活派", meta: "成员：300+", content: "关注生活、情感、成长" },
-  { title: "AI 先锋", meta: "成员：500+", content: "AI 相关话题讨论" },
-];
-
-function Card({ item }: { item: Item }) {
-  return (
-    <div className="card">
-      <div className="card-title">{item.title}</div>
-      <div className="card-meta">{item.meta}</div>
-      <div className="card-content">{item.content}</div>
-    </div>
-  );
-}
-
-export default function FactionsPage() {
+export default function ChatPage() {
   return (
     <main>
       <header className="site-header">
@@ -46,14 +29,10 @@ export default function FactionsPage() {
       </header>
 
       <section>
-        <h2>热门派别</h2>
-        <div className="card-list">
-          {factions.map((it, i) => (
-            <Card key={i} item={it} />
-          ))}
-        </div>
+        <h2>💬 聊天对话</h2>
+        <p>与其他用户聊天或与AI助手对话</p>
+        <ChatClient />
       </section>
     </main>
   );
 }
-
