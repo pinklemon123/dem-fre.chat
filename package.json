@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "newsbot": "python main.py newsbot",
+    "python-info": "python main.py info"
   },
   "dependencies": {
     "react": "19.1.0",
