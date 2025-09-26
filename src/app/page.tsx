@@ -140,7 +140,7 @@ export default async function HomePage() {
                 { href: "#hot", label: "热帖" },
                 { href: "#factions", label: "热门派别" },
                 { href: "#ranking", label: "用户排行" },
-                { href: "/newsbot", label: "新闻机器人" },
+                { href: "https://newschat-production.up.railway.app/static/index.html", label: "新闻机器人" },
                 { href: "/chat", label: "聊天对话" },
                 { href: "/guest", label: "游客体验" },
               ]}
@@ -153,7 +153,7 @@ export default async function HomePage() {
                 <li><Link href="#hot">热帖</Link></li>
                 <li><Link href="#factions">热门派别</Link></li>
                 <li><Link href="#ranking">用户排行</Link></li>
-                <li><Link href="/newsbot">新闻机器人</Link></li>
+                <li><a href="https://newschat-production.up.railway.app/static/index.html" target="_blank" rel="noopener noreferrer">新闻机器人</a></li>
                 <li><Link href="/chat">聊天对话</Link></li>
                 <li><Link href="/guest">游客体验</Link></li>
                 {/* 新增：补回登录入口 */}

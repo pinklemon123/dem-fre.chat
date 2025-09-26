@@ -118,15 +118,34 @@ export default function NavClient({
 
   return (
     <nav>
-      {links.map((l) => (
-        <Link
-          key={l.href}
-          href={l.href}
-          className={isActive(l.href) ? "active" : undefined}
-        >
-          {l.label}
-        </Link>
-      ))}
+      {links.map((l) => {
+        // Check if it's an external URL
+        const isExternal = l.href.startsWith('http://') || l.href.startsWith('https://');
+        
+        if (isExternal) {
+          return (
+            <a
+              key={l.href}
+              href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={isActive(l.href) ? "active" : undefined}
+            >
+              {l.label}
+            </a>
+          );
+        }
+        
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            className={isActive(l.href) ? "active" : undefined}
+          >
+            {l.label}
+          </Link>
+        );
+      })}
       {clientError ? null : loading ? null : user ? (
         <div className="nav-auth">
           <Link href="/posts/new" className="primary">发帖</Link>
